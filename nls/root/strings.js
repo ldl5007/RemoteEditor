@@ -27,6 +27,9 @@
 /*global define */
 
 define({
+
+	LOADING: "Loading\u2026",
+
     "MY_DOCUMENTS"                      : "My Documents",
     "DOCUMENTS"                         : "Documents",
     "MENU_TITLE"                        : "New Project…",
