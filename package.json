@@ -1,10 +1,10 @@
 {
-    "name": "jeffbooher.new-project",
-    "title": "Brackets New Project Creator",
-    "description": "Create New Projects without leaving Brackets.",
-    "homepage": "https://github.com/JeffryBooher/brackets-newproject-extension",
-    "version": "0.4.98",
-    "author": "Jeffry Booher",
+    "name": "RemoteEditor",
+    "title": "Brackets Remote Editor",
+    "description": "Edit, Sync, Compare files from remote server",
+    "homepage": "https://github.com/ldl5007/RemoteEditor.git",
+    "version": "0.0.1",
+    "author": "Lam Ly",
     "license": "MIT",
     "i18n": [
         "en",
