@@ -8,7 +8,7 @@ define(function (require, exports) {
 	var $icon = $("<a id='remote-editor-icon' href='#'></a>")
 					.attr("title", String.LOADING)
 					.addClass("loading")
-					.appendTo($("#main-toolbar .button"));
+					.appendTo($("#main-toolbar .buttons"));
 
 
 	function initUi() {

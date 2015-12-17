@@ -8,9 +8,12 @@ define(function (require, exports, module) {
 
     var AppInit        = brackets.getModule("utils/AppInit"),
 		CommandManager = brackets.getModule("command/CommandManager"),
+		ExtensionUtils = brackets.getModule("utils/ExtensionUtils"),
 		Menus          = brackets.getModule("command/Menus");
 
 	var Main = require("src/Main");
+
+	ExtensionUtils.loadStyleSheet(module, "styles/brackets-remote-editor.less");
 
     var COMMAND_ID = "testing.tutorialExt.LogHelloWorld";
     var COMMAND_NAME = "Log Hello World";
