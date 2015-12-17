@@ -1,5 +1,6 @@
 /*
  *
+ *
  */
 
 
@@ -13,6 +14,7 @@ define(function (require, exports, module) {
 
 	var Main = require("src/Main");
 
+	// Load stylesheet
 	ExtensionUtils.loadStyleSheet(module, "styles/brackets-remote-editor.less");
 
     var COMMAND_ID = "testing.tutorialExt.LogHelloWorld";
