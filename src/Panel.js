@@ -1,5 +1,6 @@
 /*
- *
+ * Remote Editor Panel:
+ *   The goal of this panel is to keeping the link between local and remote version of the edit file.
  */
 
 define(function (require, exports) {
@@ -46,6 +47,10 @@ define(function (require, exports) {
 
 		toggle(true);
 	}
+
+
+
+
 
 
 	exports.toggle = toggle;
