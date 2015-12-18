@@ -28,6 +28,7 @@
 
 define({
 
+	EXT_NAME: "[ReEd]",
 	LOADING: "Loading\u2026",
 
     "MY_DOCUMENTS"                      : "My Documents",

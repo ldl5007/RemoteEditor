@@ -5,7 +5,8 @@
 define(function (require, exports) {
 	"use strict";
 
-	var Globals = require("src/Globals");
+	var Globals = require("src/Globals"),
+		Logger  = require("src/Logger");
 
 	function FileInfo(localPath, remotePath) {
 		this.objId = Globals.OBJECT_ID_FILE_INFO;
@@ -14,9 +15,16 @@ define(function (require, exports) {
 	}
 
 	FileInfo.prototype.debugPrint = function() {
-		console.log()
+		Logger.consoleDebug("objId: " + this.objId);
+		Logger.consoleDebug("localPath: " + this.localPath);
+		Logger.consoleDebug("remotePath: " + this.remotePath);
 	}
 
+	function revise(object){
+		var newFileInfo = new FileInfo(object.localPath, object.remotePath);
+
+		return newFileInfo;
+	}
 
 	exports.FileInfo = FileInfo;
 

@@ -9,7 +9,6 @@ define(function(require, exports, module) {
     var PreferencesManager = brackets.getModule("preferences/PreferencesManager");
     var StateManager = PreferencesManager.stateManager;
 
-
 	/**
 	 * Extension modules
 	 */
@@ -23,6 +22,7 @@ define(function(require, exports, module) {
 	var osFtpPackageJson;
     var defaultPreferences = {
         // features
+		/*
         "treatFileWithoutExtentionAsAscii": {
             "type": "boolean",
             "value": true
@@ -31,6 +31,7 @@ define(function(require, exports, module) {
             "type": 'string',
             "value": '{"tableData":["asm","c","cpp","css","doc","docx","esp","html","git","gradle","java","js","json","less","md","out","pl","py","rb","temp","text","txt"]}'
         },
+		*/
 		"debugMode": {
 			"type": "boolean",
 			"value": false
@@ -38,40 +39,27 @@ define(function(require, exports, module) {
     };
 
 
-	osFtpPackage.getPackage(preferencesInit);
+	var prefs = PreferencesManager.getExtensionPrefs(Globals.PRODUCT_PREFIX);
 
-	function preferencesInit(packageJson) {
-
-		//log this call
-		console.log('preferencesInit();');
-
-		//set global
-		osFtpPackageJson = packageJson;
-
-		var prefs = PreferencesManager.getExtensionPrefs(osFtpPackageJson.name + osFtpGlobals.SETTINGS_PREF);
-
-		_.each(defaultPreferences, function (definition, key) {
-			if (definition.os && definition.os[brackets.platform]) {
-				prefs.definePreference(key, definition.type, definition.os[brackets.platform].value);
-			} else {
-				prefs.definePreference(key, definition.type, definition.value);
-			}
-		});
-
-		prefs.save();
-	}
-
+	_.each(defaultPreferences, function (definition, key) {
+		if (definition.os && definition.os[brackets.platform]) {
+			prefs.definePreference(key, definition.type, definition.os[brackets.platform].value);
+		} else {
+			prefs.definePreference(key, definition.type, definition.value);
+		}
+	});
+	prefs.save();
 
 
     function get(key) {
         var location = defaultPreferences[key] ? PreferencesManager : StateManager;
-        arguments[0] = osFtpPackageJson.name + osFtpGlobals.SETTINGS_PREF + "." + key;
+        arguments[0] = Globals.PRODUCT_PREFIX + "." + key;
         return location.get.apply(location, arguments);
     }
 
     function set(key) {
         var location = defaultPreferences[key] ? PreferencesManager : StateManager;
-        arguments[0] = osFtpPackageJson.name + osFtpGlobals.SETTINGS_PREF + "." + key;
+        arguments[0] = Globals.PRODUCT_PREFIX + "." + key;
         return location.set.apply(location, arguments);
     }
 
