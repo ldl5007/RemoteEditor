@@ -1,8 +1,8 @@
 define (function (require, exports) {
 	"use strict";
 
-	var Strings     = require("strings");
-	var Preferences = require("src/Preferences");
+	var Strings     = require("strings"),
+		Preferences = require("src/Preferences");
 
 	function consoleDebug(message){
 		var debugOn = Preferences.get("debugMode");

@@ -5,16 +5,14 @@ define(function(require, exports, module) {
 	/**
 	 * Bracket modules
 	 */
-    var _ = brackets.getModule("thirdparty/lodash");
-    var PreferencesManager = brackets.getModule("preferences/PreferencesManager");
-    var StateManager = PreferencesManager.stateManager;
+    var _                  = brackets.getModule("thirdparty/lodash"),
+		PreferencesManager = brackets.getModule("preferences/PreferencesManager"),
+		StateManager       = PreferencesManager.stateManager;
 
 	/**
 	 * Extension modules
 	 */
 	var Globals = require('src/Globals');
-	var osFtpPackage = require('src/package');
-
 
 	/**
 	 * Global variables
