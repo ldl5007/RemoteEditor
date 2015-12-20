@@ -11,7 +11,7 @@ define (function (require, exports) {
 			var date = new Date();
 			var timeStr = "[" + date.toLocaleTimeString() + "]";
 
-			console.log(Strings.EXT_NAME + timeStr + message);
+			console.log(Strings.EXT_NAME + "[Debug]" + timeStr + message);
 		}
 	}
 

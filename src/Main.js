@@ -3,7 +3,8 @@ define(function (require, exports) {
 
 	var AppInit = brackets.getModule("utils/AppInit");
 
-	var Panel = require("src/Panel");
+	var Panel  = require("src/Panel"),
+		Logger = require("src/Logger");
 
 	var $icon = $("<a id='remote-editor-icon' href='#'></a>")
 					.attr("title", String.LOADING)
@@ -12,14 +13,14 @@ define(function (require, exports) {
 
 
 	function initUi() {
-		console.log("Main.initUi()");
+		Logger.consoleDebug("Main.initUi()");
 		Panel.init();
 		$icon.on("click", Panel.toggle);
 	}
 
 
 	function init(){
-		console.log("Main.init()")
+		Logger.consoleDebug("Main.init()")
 		AppInit.htmlReady(function() {
 			$icon.removeClass("loading").removeAttr("title");
 

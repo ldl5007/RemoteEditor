@@ -1,4 +1,4 @@
-define(function(require, exports, module) {
+define( function (require, exports, module) {
     "use strict";
 
 
@@ -12,12 +12,13 @@ define(function(require, exports, module) {
 	/**
 	 * Extension modules
 	 */
-	var Globals = require('src/Globals');
+	var Globals = require("src/Globals");
 
 	/**
 	 * Global variables
 	 */
 	var osFtpPackageJson;
+
     var defaultPreferences = {
         // features
 		/*

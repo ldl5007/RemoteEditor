@@ -8,7 +8,8 @@ define(function (require, exports) {
 
 	var WorkspaceManager = brackets.getModule("view/WorkspaceManager");
 
-	var Main = require("./Main");
+	var Main   = require("./Main"),
+		Logger = require("src/Logger");
 
 	var reEdPanelTemplate = require("text!templates/remote-editor-panel.html");
 
@@ -19,7 +20,7 @@ define(function (require, exports) {
 
 
 	function toggle(bool) {
-		console.log("Panel.toggle("+bool+")");
+		Logger.consoleDebug("Panel.toggle("+bool+")");
 		if (reEdPanelDisable === true){
 			return;
 		}
@@ -28,13 +29,13 @@ define(function (require, exports) {
 		}
 
 		Main.$icon.toggleClass("on", bool);
-		console.log('setPanel visible');
+		Logger.consoleDebug('setPanel visible');
 		reEdPanel.setVisible(bool);
 	}
 
 
 	function init() {
-		console.log("Panel.init()");
+		Logger.consoleDebug("Panel.init()");
 		// Add panel
 		var panelHtml = Mustache.render(reEdPanelTemplate, String);
 		var $panelHtml = $(panelHtml);
