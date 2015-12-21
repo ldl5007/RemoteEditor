@@ -33,7 +33,7 @@ define( function (require, exports, module) {
 		*/
 		"debugMode": {
 			"type": "boolean",
-			"value": false
+			"value": true
 		}
     };
 

@@ -20,7 +20,7 @@ define(function (require, exports) {
 
 
 	function toggle(bool) {
-		Logger.consoleDebug("Panel.toggle("+bool+")");
+		Logger.consoleDebug("Panel.toggle(" + bool + ")");
 		if (reEdPanelDisable === true){
 			return;
 		}
@@ -29,7 +29,7 @@ define(function (require, exports) {
 		}
 
 		Main.$icon.toggleClass("on", bool);
-		Logger.consoleDebug('setPanel visible');
+		Logger.consoleDebug("setPanel visible(" + bool +")");
 		reEdPanel.setVisible(bool);
 	}
 
@@ -43,13 +43,28 @@ define(function (require, exports) {
 		reEdPanel = WorkspaceManager.createBottomPanel("brackets-remote-editor.panel", $panelHtml, 100);
 		$reEdPanel = reEdPanel.$panel;
 
-		$reEdPanel
-			.on("click", ".close", toggle);
+		$reEdPanel.on("click", ".close", toggle);
 
+		initFileTable();
 		toggle(true);
 	}
 
 
+	function initFileTable() {
+		Logger.consoleDebug("Panel.initFileTable()");
+
+		var tableContainer = 'file-table';
+		var tableId = 'testingTable';
+
+		var html  = '<table id="' + tableId + '" class=table table-striped table-bordered>';
+			html += 'testing table template';
+
+			html += '</table>';
+
+		// Insert table;
+		$("#"+tableContainer, $reEdPanel).html(html);
+
+	}
 
 
 

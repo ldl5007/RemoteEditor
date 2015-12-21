@@ -12,7 +12,8 @@ define(function (require, exports, module) {
 		ExtensionUtils = brackets.getModule("utils/ExtensionUtils"),
 		Menus          = brackets.getModule("command/Menus");
 
-	var Main = require("src/Main");
+	var Logger = require("src/Logger"),
+		Main   = require("src/Main");
 
 	// Load stylesheet
 	ExtensionUtils.loadStyleSheet(module, "styles/brackets-remote-editor.less");
@@ -29,6 +30,7 @@ define(function (require, exports, module) {
     fileMenu.addMenuItem(COMMAND_ID);
 
 	AppInit.appReady(function() {
+		Logger.consoleDebug("main.appReady()");
 		Main.init();
 	});
 
