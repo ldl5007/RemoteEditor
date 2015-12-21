@@ -22,6 +22,10 @@ define (function (require, exports) {
 
 	}
 
+	function removeFile(fileId) {
+
+	}
+
 	function reviseFile(object){
 		var newFileInfo = new FileInfo(object.localPath, object.remotePath, object.remoteServer);
 
@@ -44,9 +48,14 @@ define (function (require, exports) {
 
 	function testingDebug() {
 		Logger.consoleDebug("testingDebug()");
+
+
 	}
 
 	exports.testingDebug  = testingDebug;
+
+	exports.registerFile = registerFile;
+	exports.removeFile   = removeFile;
 	exports.validateFile = validateFile;
 	exports.init         = init;
 

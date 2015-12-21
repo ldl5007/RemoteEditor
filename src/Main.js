@@ -24,9 +24,7 @@ define(function (require, exports) {
 		AppInit.htmlReady(function() {
 			$icon.removeClass("loading").removeAttr("title");
 
-
 			initUi();
-
 		});
 	}
 
