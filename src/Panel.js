@@ -102,7 +102,18 @@ define(function (require, exports) {
 		}
 	}
 
+	function deleteRow(fileInfo){
+		Logger.consoleDebug("Panel.deleteRow()");
+		var rowId = tableId + '-';
 
+		if (FileManager.validateFile(fileInfo)) {
+			rowId += fileInfo.getId();
+
+			$("#"+ rowId, $reEdPanel).remove();
+		}
+	}
+
+	exports.deleteRow    = deleteRow;
 	exports.insertNewRow = insertNewRow;
 	exports.toggle = toggle;
 	exports.init   = init;
