@@ -9,7 +9,7 @@ define (function (require, exports) {
 
 		if (debugOn){
 			var date = new Date();
-			var timeStr = "[" + date.toLocaleTimeString() + "]";
+			var timeStr = "[" + date.toLocaleTimeString() + "] ";
 
 			console.log(Strings.EXT_NAME + "[Debug]" + timeStr + message);
 		}

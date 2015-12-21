@@ -8,8 +8,9 @@ define(function (require, exports) {
 
 	var WorkspaceManager = brackets.getModule("view/WorkspaceManager");
 
-	var Main   = require("./Main"),
-		Logger = require("src/Logger");
+	var FileInfo = require("src/FileInfo"),
+		Main     = require("./Main"),
+		Logger   = require("src/Logger");
 
 	var reEdPanelTemplate = require("text!templates/remote-editor-panel.html");
 
@@ -67,6 +68,9 @@ define(function (require, exports) {
 	}
 
 
+	function insertFileInfo(fileInfo){
+
+	}
 
 
 	exports.toggle = toggle;

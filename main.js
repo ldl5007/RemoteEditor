@@ -12,6 +12,10 @@ define(function (require, exports, module) {
 		ExtensionUtils = brackets.getModule("utils/ExtensionUtils"),
 		Menus          = brackets.getModule("command/Menus");
 
+
+	var FileManager = require("src/FileManager");
+
+
 	var Logger = require("src/Logger"),
 		Main   = require("src/Main");
 
@@ -21,11 +25,7 @@ define(function (require, exports, module) {
     var COMMAND_ID = "testing.tutorialExt.LogHelloWorld";
     var COMMAND_NAME = "Log Hello World";
 
-    function sayHello() {
-        console.log("Hello World");
-    }
-
-    CommandManager.register(COMMAND_NAME, COMMAND_ID, sayHello);
+    CommandManager.register(COMMAND_NAME, COMMAND_ID, FileManager.testingDebug);
     var fileMenu = Menus.getMenu(Menus.AppMenuBar.FILE_MENU);
     fileMenu.addMenuItem(COMMAND_ID);
 

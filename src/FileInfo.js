@@ -8,39 +8,46 @@ define(function (require, exports) {
 	var Globals = require("src/Globals"),
 		Logger  = require("src/Logger");
 
+	var fileId = 0;
+
 	function FileInfo(localPath, remotePath, remoteServer) {
 		this.objId = Globals.OBJECT_ID_FILE_INFO;
+		this.id           = getNewId();
 		this.localPath    = localPath;
 		this.remotePath   = remotePath;
 		this.remoteServer = remoteServer;
 
 	}
 
-	function isValid() {
-		var returnStatus = false;
+	FileInfo.prototype.getId = function() {
+		return this.id;
+	}
 
-		if (typeof this === "object") {
-			if (this.hasOwnProperty("objId")){
-				if (this.objId === Globals.OBJECT_ID_FILE_INFO){
-					returnStatus = true;
-				}
-			}
-		}
+	FileInfo.prototype.getLocalPath = function() {
+		return this.localPath;
+	};
 
-		return returnStatus;
+	FileInfo.prototype.getRemotePath = function() {
+		return this.remotePath;
+	};
+
+	FileInfo.prototype.getRemoteServer = function() {
+		return this.remoteServer;
 	}
 
 	FileInfo.prototype.debugPrint = function() {
 		Logger.consoleDebug("objId: " + this.objId);
+		Logger.consoleDebug("id: " + this.id);
 		Logger.consoleDebug("localPath: " + this.localPath);
 		Logger.consoleDebug("remotePath: " + this.remotePath);
 		Logger.consoleDebug("remoteServer: " + this.remoteServer);
-	}
+	};
 
-	function revise(object){
-		var newFileInfo = new FileInfo(object.localPath, object.remotePath, object.remoteServer);
+	function getNewId(){
+		var returnId = fileId;
+		fileId ++;
 
-		return newFileInfo;
+		return returnId;
 	}
 
 	exports.FileInfo = FileInfo;
