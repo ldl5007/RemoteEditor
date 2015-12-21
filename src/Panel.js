@@ -8,9 +8,10 @@ define(function (require, exports) {
 
 	var WorkspaceManager = brackets.getModule("view/WorkspaceManager");
 
-	var FileInfo = require("src/FileInfo"),
-		Main     = require("./Main"),
-		Logger   = require("src/Logger");
+	var FileInfo    = require("src/FileInfo"),
+		FileManager = require("src/FileManager"),
+		Main        = require("./Main"),
+		Logger      = require("src/Logger");
 
 	var reEdPanelTemplate = require("text!templates/remote-editor-panel.html");
 
@@ -18,6 +19,9 @@ define(function (require, exports) {
 	var reEdPanel = null,
 		$reEdPanel = $(null),
 		reEdPanelDisable = null;
+
+	var tableDiv = 'file-table',
+		tableId  = 'testingTable';
 
 
 	function toggle(bool) {
@@ -54,25 +58,52 @@ define(function (require, exports) {
 	function initFileTable() {
 		Logger.consoleDebug("Panel.initFileTable()");
 
-		var tableContainer = 'file-table';
-		var tableId = 'testingTable';
-
-		var html  = '<table id="' + tableId + '" class=table table-striped table-bordered>';
-			html += 'testing table template';
-
+		var html  = '<table id="' + tableId + '" class="table table-striped">';
+			html += '<tr class="file-row" id="' + tableId + '-header">';
+			html += '<th><input type="checkbox" /></th>';
+			html += '<th>Local Path</th>';
+			html += '<th>Remote Path</th>';
+			html += '<th>Remote Server</th></tr>';
 			html += '</table>';
 
 		// Insert table;
-		$("#"+tableContainer, $reEdPanel).html(html);
+		$("#"+tableDiv, $reEdPanel).html(html);
 
 	}
 
 
-	function insertFileInfo(fileInfo){
+	function insertNewRow(fileInfo, afterRow){
+		Logger.consoleDebug("Panel.insertNewRow()");
 
+		var html = '';
+		var rowId = tableId + '-';
+
+		if (FileManager.validateFile(fileInfo)) {
+			rowId += fileInfo.getId();
+
+			html += '<tr class="file-row" id="' + rowId + '">';
+			html += '<td class="col-1"><input type="checkbox" /></td>';
+			html += '<td class="col-2">' + fileInfo.getLocalPath()    +'</td>';
+			html += '<td class="col-3">' + fileInfo.getRemotePath()   +'</td>';
+			html += '<td class="col-4">' + fileInfo.getRemoteServer() +'</td>';
+			html += '</tr>';
+
+			console.log(html);
+
+			// If the after Row does not exist or not matched
+			console.log($("#"+ tableId + "-" + afterRow, $reEdPanel));
+
+			if ($("#"+ tableId + "-" + afterRow, $reEdPanel).length == 0){
+				$("#"+ tableId, $reEdPanel).append(html);
+			}
+			else {
+				$("#"+ tableId + "-" + afterRow, $reEdPanel).after(html);
+			}
+		}
 	}
 
 
+	exports.insertNewRow = insertNewRow;
 	exports.toggle = toggle;
 	exports.init   = init;
 });
