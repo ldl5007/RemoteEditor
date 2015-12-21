@@ -1,8 +1,8 @@
 define(function (require, exports) {
     "use strict";
 
-	exports.CHECK_ALL   = 'reEd.check.all';
-	exports.ADD_FILE    = 'reEd.add.file';
-	exports.REMOVE_FILE = 'reEd.remove.file';
+	exports.PANEL_CHECK_ALL   = 'reEd.panel.check.all';
+	exports.PANEL_ADD_FILE    = 'reEd.panel.add.file';
+	exports.PANEL_REMOVE_FILE = 'reEd.panel.remove.file';
 
 });

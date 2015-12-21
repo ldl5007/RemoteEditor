@@ -53,9 +53,9 @@ define(function (require, exports) {
 
 		$reEdPanel
 			.on("click", ".close", toggle)
-			.on("click", ".check-all",   EventEmitter.emitFactory(Events.CHECK_ALL))
-			.on("click", ".add-file",    EventEmitter.emitFactory(Events.ADD_FILE))
-			.on("click", ".remove-file", EventEmitter.emitFactory(Events.REMOVE_FILE));
+			.on("click", ".check-all",   EventEmitter.emitFactory(Events.PANEL_CHECK_ALL))
+			.on("click", ".add-file",    EventEmitter.emitFactory(Events.PANEL_ADD_FILE))
+			.on("click", ".remove-file", EventEmitter.emitFactory(Events.PANEL_REMOVE_FILE));
 
 
 		initFileTable();
@@ -118,13 +118,13 @@ define(function (require, exports) {
 
 
 	// Events Listeners
-	EventEmitter.on(Events.CHECK_ALL, function() {
+	EventEmitter.on(Events.PANEL_CHECK_ALL, function() {
 		Logger.consoleDebug('Check All Event');
 	});
 
 	var newFile = null;
 
-	EventEmitter.on(Events.ADD_FILE, function() {
+	EventEmitter.on(Events.PANEL_ADD_FILE, function() {
 		Logger.consoleDebug('Add File Event');
 
 		newFile = new FileInfo.FileInfo("insert", "insert", "insert");
@@ -132,7 +132,7 @@ define(function (require, exports) {
 		insertNewRow(newFile);
 	});
 
-	EventEmitter.on(Events.REMOVE_FILE, function() {
+	EventEmitter.on(Events.PANEL_REMOVE_FILE, function() {
 		Logger.consoleDebug('Remove File Event');
 
 		deleteRow(newFile);
