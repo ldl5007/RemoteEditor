@@ -53,7 +53,8 @@ define(function (require, exports) {
 
 		$reEdPanel
 			.on("click", ".close", toggle)
-			.on("click", ".add-file", EventEmitter.emitFactory(Events.ADD_FILE))
+			.on("click", ".check-all",   EventEmitter.emitFactory(Events.CHECK_ALL))
+			.on("click", ".add-file",    EventEmitter.emitFactory(Events.ADD_FILE))
 			.on("click", ".remove-file", EventEmitter.emitFactory(Events.REMOVE_FILE));
 
 
@@ -66,11 +67,6 @@ define(function (require, exports) {
 		Logger.consoleDebug("Panel.initFileTable()");
 
 		var html  = '<table id="' + tableId + '" class="table table-striped">';
-			html += '<tr class="file-row" id="' + tableId + '-header">';
-			html += '<th><input type="checkbox" /></th>';
-			html += '<th>Local Path</th>';
-			html += '<th>Remote Path</th>';
-			html += '<th>Remote Server</th></tr>';
 			html += '</table>';
 
 		// Insert table;
@@ -122,12 +118,24 @@ define(function (require, exports) {
 
 
 	// Events Listeners
+	EventEmitter.on(Events.CHECK_ALL, function() {
+		Logger.consoleDebug('Check All Event');
+	});
+
+	var newFile = null;
+
 	EventEmitter.on(Events.ADD_FILE, function() {
 		Logger.consoleDebug('Add File Event');
+
+		newFile = new FileInfo.FileInfo("insert", "insert", "insert");
+
+		insertNewRow(newFile);
 	});
 
 	EventEmitter.on(Events.REMOVE_FILE, function() {
 		Logger.consoleDebug('Remove File Event');
+
+		deleteRow(newFile);
 	});
 
 
