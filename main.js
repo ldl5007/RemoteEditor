@@ -22,6 +22,7 @@ define(function (require, exports, module) {
 
 	// Load stylesheet
 	ExtensionUtils.loadStyleSheet(module, "styles/brackets-remote-editor.less");
+	ExtensionUtils.loadStyleSheet(module, "styles/fonts/octicons.less");
 
     var COMMAND_ID = "testing.tutorialExt.LogHelloWorld";
     var COMMAND_NAME = "Log Hello World";

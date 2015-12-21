@@ -50,10 +50,14 @@ define (function (require, exports) {
 	function testingDebug() {
 		Logger.consoleDebug("testingDebug()");
 
-		var newFile = new File.FileInfo("testing1", "testing2", "testing3");
+		var newFile1 = new File.FileInfo("testing1", "testing2", "testing3");
+		var newFile2 = new File.FileInfo("insert", "insert", "insert");
 
-		Panel.insertNewRow(newFile);
+		Panel.insertNewRow(newFile1);
+		Panel.insertNewRow(newFile2, 0);
 	}
+
+
 
 	exports.testingDebug  = testingDebug;
 
