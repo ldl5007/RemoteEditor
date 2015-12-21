@@ -12,7 +12,7 @@ define(function (require, exports) {
 		Events       = require("src/Events"),
 		FileInfo     = require("src/FileInfo"),
 		FileManager  = require("src/FileManager"),
-		Main         = require("./Main"),
+		Main         = require("src/Main"),
 		Logger       = require("src/Logger"),
 		Strings      = require("strings");
 
@@ -24,7 +24,8 @@ define(function (require, exports) {
 		reEdPanelDisable = null;
 
 	var tableDiv = 'file-table',
-		tableId  = 'testingTable';
+		tableId  = 'testingTable',
+		rowPrefix = '';
 
 
 	function toggle(bool) {
@@ -69,6 +70,8 @@ define(function (require, exports) {
 		var html  = '<table id="' + tableId + '" class="table table-striped">';
 			html += '</table>';
 
+		rowPrefix = tableId + "-row-";
+
 		// Insert table;
 		$("#"+tableDiv, $reEdPanel).html(html);
 
@@ -79,10 +82,9 @@ define(function (require, exports) {
 		Logger.consoleDebug("Panel.insertNewRow()");
 
 		var html = '';
-		var rowId = tableId + '-';
 
 		if (FileManager.validateFile(fileInfo)) {
-			rowId += fileInfo.getId();
+			var rowId = rowPrefix + fileInfo.getId();
 
 			html += '<tr class="file-row" id="' + rowId + '">';
 			html += '<td class="col-1"><input type="checkbox" /></td>';
@@ -94,8 +96,6 @@ define(function (require, exports) {
 			console.log(html);
 
 			// If the after Row does not exist or not matched
-			console.log($("#"+ tableId + "-" + afterRow, $reEdPanel));
-
 			if ($("#"+ tableId + "-" + afterRow, $reEdPanel).length == 0){
 				$("#"+ tableId, $reEdPanel).append(html);
 			}
@@ -105,23 +105,34 @@ define(function (require, exports) {
 		}
 	}
 
-	function deleteRow(fileInfo){
+	function deleteRow(fileId){
 		Logger.consoleDebug("Panel.deleteRow()");
-		var rowId = tableId + '-';
+		var rowId = rowPrefix + fileId;
 
-		if (FileManager.validateFile(fileInfo)) {
-			rowId += fileInfo.getId();
-
-			$("#"+ rowId, $reEdPanel).remove();
-		}
+		$("#"+ rowId, $reEdPanel).remove();
 	}
 
 	function checkAll() {
 		var status = $(this).is(":checked");
 
-		$('.file-row', $reEdPanel).each( function() {
+		$('.file-row', $reEdPanel).each(function() {
 			$(this).find("input:checkbox").prop('checked', status);
 		});
+	}
+
+	function getSelectedFiles(){
+		var returnList = [];
+		var id;
+
+		$(".file-row", $reEdPanel).each(function() {
+			id = $(this).attr('id');
+			if ($(this).find("input:checked").prop('checked')){
+				console.log(id);
+				returnList.push(id.replace(rowPrefix, ''));
+			}
+		});
+
+		return returnList;
 	}
 
 	// Events Listeners
@@ -139,7 +150,14 @@ define(function (require, exports) {
 	EventEmitter.on(Events.PANEL_REMOVE_FILE, function() {
 		Logger.consoleDebug('Remove File Event');
 
-		deleteRow(newFile);
+		var selFiles = getSelectedFiles();
+
+		for (var index = 0; index < selFiles.length; index++){
+			deleteRow(selFiles[index]);
+		}
+
+		// clear check all
+		$(".check-all", $reEdPanel).prop("checked", false);
 	});
 
 
