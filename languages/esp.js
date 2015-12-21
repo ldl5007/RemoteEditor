@@ -3,10 +3,10 @@
  */
 define(function (require, exports) {
 	"use strict";
-	
+
 	//I'm figuring this out as I go so the comments will become more indepth as time
 	//goes on.
-	
+
 	//This is the entire definition for the esp language. After defining it here, we are
 	//able to add it through the LanguageManager in brackets
 	CodeMirror.defineMode("esp", function (config, parserConfig) {
@@ -33,17 +33,36 @@ define(function (require, exports) {
 					type: "atom",
 					style: "atom"
 				};
+			
+			var keywordA = 'else do end then procedure select otherwise when while',
+				keywordB = 'assign gosub retsub call exit return',
+				keywordC = 'seccall intcmd intread pause resume appc write vartable wto socket control nparse iterate leave forever parse args delay abs b2c a2e bitor bitxor bitand copies c2b c2d c2x c2fp date d2x d2c e2a fp2c fp2x insert int log log10 lower upper max min sqrt noyes right left random pos null0 remstr selstr sin cos space substr translate typechk word words zfeature x2c x2d x2fp wordpos wordlength',
+				operators = 'on share noshare not to and or';
 
-			var espKeywords = {
+			//Define all of the keywords that are esp specific
+			var keywords = {
 				"if": kw("if"),
-				"do": B,
-				"end": B
+				"function": kw("function")
 			}
+			
+			var addStringToList = function(string, object){
+				var addArray = string.split(" ");
+				
+				for(var i = 0; i<addArray.length; i++){
+					keywords[addArray[i]] = object;
+				}
+			}
+			
+			addStringToList(keywordA, A);
+			addStringToList(keywordB, B);
+			addStringToList(keywordC, C);
+			addStringToList(operators, operator);
 
-			return espKeywords;
+			return keywords;
 		}
 
-		var isOperatorChar = /[+\-*&%=<>!?|~^]/;
+		var espKeywords = keywords();
+		var isOperatorChar = /[+\-*&%=<>!?|~^(||)]/;
 
 		// Used as scratch variables to communicate multiple values without
 		// consing up tons of objects.
@@ -80,7 +99,7 @@ define(function (require, exports) {
 			} else if (/\d/.test(ch)) {
 				stream.match(/^\d*(?:\.\d*)?(?:[eE][+\-]?\d+)?/);
 				return ret("number", "number");
-			} 
+			}
 			/***********************************/
 			/******* BLOCK COMMENTS ************/
 			/***********************************/
@@ -100,24 +119,26 @@ define(function (require, exports) {
 					stream.eatWhile(isOperatorChar);
 					return ret("operator", "operator", stream.current());
 				}
-			} 
+			}
 			/***********************************/
 			/******* LINE COMMENTS *************/
 			/***********************************/
-			else if (ch == "-"){
-				if(stream.eat("*")) {
+			else if (ch == "-") {
+				if (stream.eat("*")) {
 					stream.skipToEnd();
 					return ret("comment", "comment");
 				}
-			} 
-			
+			}
+
 			/***********************************/
 			/******* KEYWORDS ******************/
 			/***********************************/
 			else if (wordRE.test(ch)) {
 				stream.eatWhile(wordRE);
-				var word = stream.current(),
-					known = keywords.propertyIsEnumerable(word) && keywords[word];
+				var word = stream.current().toLowerCase(), //Casing is not important in ESP so normalize everything to lower case
+					known = espKeywords.propertyIsEnumerable(word) && espKeywords[word];
+
+
 				return (known && state.lastType != ".") ? ret(known.type, known.style, word) :
 					ret("variable", "variable", word);
 			}
@@ -299,7 +320,7 @@ define(function (require, exports) {
 
 		function statement(type, value) {
 			//console.log(type, value);
-			if (type == "var") return cont(pushlex("vardef", value.length), vardef, expect(";"), poplex);
+			//if (type == "var") return cont(pushlex("vardef", value.length), vardef, expect(";"), poplex);
 			if (type == "keyword a") return cont(pushlex("form"), expression, statement, poplex);
 			if (type == "keyword b") return cont(pushlex("form"), statement, poplex);
 			if (type == "{") return cont(pushlex("}"), block, poplex);
