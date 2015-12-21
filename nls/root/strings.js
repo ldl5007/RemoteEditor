@@ -30,6 +30,8 @@ define({
 
 	EXT_NAME: "[ReEd]",
 	LOADING: "Loading\u2026",
+	ADD_FILE: "Add File",
+	REMOVE_FILE: "Remove File",
 
     "MY_DOCUMENTS"                      : "My Documents",
     "DOCUMENTS"                         : "Documents",

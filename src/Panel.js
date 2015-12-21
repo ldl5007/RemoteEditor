@@ -11,7 +11,8 @@ define(function (require, exports) {
 	var FileInfo    = require("src/FileInfo"),
 		FileManager = require("src/FileManager"),
 		Main        = require("./Main"),
-		Logger      = require("src/Logger");
+		Logger      = require("src/Logger"),
+		Strings     = require("strings");
 
 	var reEdPanelTemplate = require("text!templates/remote-editor-panel.html");
 
@@ -42,7 +43,7 @@ define(function (require, exports) {
 	function init() {
 		Logger.consoleDebug("Panel.init()");
 		// Add panel
-		var panelHtml = Mustache.render(reEdPanelTemplate, String);
+		var panelHtml = Mustache.render(reEdPanelTemplate, Strings);
 		var $panelHtml = $(panelHtml);
 
 		reEdPanel = WorkspaceManager.createBottomPanel("brackets-remote-editor.panel", $panelHtml, 100);
