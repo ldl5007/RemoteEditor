@@ -8,11 +8,13 @@ define(function (require, exports) {
 
 	var WorkspaceManager = brackets.getModule("view/WorkspaceManager");
 
-	var FileInfo    = require("src/FileInfo"),
-		FileManager = require("src/FileManager"),
-		Main        = require("./Main"),
-		Logger      = require("src/Logger"),
-		Strings     = require("strings");
+	var EventEmitter = require("src/EventEmitter"),
+		Events       = require("src/Events"),
+		FileInfo     = require("src/FileInfo"),
+		FileManager  = require("src/FileManager"),
+		Main         = require("./Main"),
+		Logger       = require("src/Logger"),
+		Strings      = require("strings");
 
 	var reEdPanelTemplate = require("text!templates/remote-editor-panel.html");
 
@@ -49,7 +51,11 @@ define(function (require, exports) {
 		reEdPanel = WorkspaceManager.createBottomPanel("brackets-remote-editor.panel", $panelHtml, 100);
 		$reEdPanel = reEdPanel.$panel;
 
-		$reEdPanel.on("click", ".close", toggle);
+		$reEdPanel
+			.on("click", ".close", toggle)
+			.on("click", ".add-file", EventEmitter.emitFactory(Events.ADD_FILE))
+			.on("click", ".remove-file", EventEmitter.emitFactory(Events.REMOVE_FILE));
+
 
 		initFileTable();
 		toggle(true);
@@ -113,6 +119,17 @@ define(function (require, exports) {
 			$("#"+ rowId, $reEdPanel).remove();
 		}
 	}
+
+
+	// Events Listeners
+	EventEmitter.on(Events.ADD_FILE, function() {
+		Logger.consoleDebug('Add File Event');
+	});
+
+	EventEmitter.on(Events.REMOVE_FILE, function() {
+		Logger.consoleDebug('Remove File Event');
+	});
+
 
 	exports.deleteRow    = deleteRow;
 	exports.insertNewRow = insertNewRow;
