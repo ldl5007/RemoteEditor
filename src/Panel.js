@@ -52,8 +52,8 @@ define(function (require, exports) {
 		$reEdPanel = reEdPanel.$panel;
 
 		$reEdPanel
-			.on("click", ".close", toggle)
-			.on("click", ".check-all",   EventEmitter.emitFactory(Events.PANEL_CHECK_ALL))
+			.on("click", ".close",     toggle)
+			.on("click", ".check-all", checkAll)
 			.on("click", ".add-file",    EventEmitter.emitFactory(Events.PANEL_ADD_FILE))
 			.on("click", ".remove-file", EventEmitter.emitFactory(Events.PANEL_REMOVE_FILE));
 
@@ -116,11 +116,15 @@ define(function (require, exports) {
 		}
 	}
 
+	function checkAll() {
+		var status = $(this).is(":checked");
+
+		$('.file-row', $reEdPanel).each( function() {
+			$(this).find("input:checkbox").prop('checked', status);
+		});
+	}
 
 	// Events Listeners
-	EventEmitter.on(Events.PANEL_CHECK_ALL, function() {
-		Logger.consoleDebug('Check All Event');
-	});
 
 	var newFile = null;
 
