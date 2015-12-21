@@ -7,17 +7,18 @@
 define(function (require, exports, module) {
     'use strict';
 
-    var AppInit        = brackets.getModule("utils/AppInit"),
-		CommandManager = brackets.getModule("command/CommandManager"),
-		ExtensionUtils = brackets.getModule("utils/ExtensionUtils"),
-		Menus          = brackets.getModule("command/Menus");
-
+    var AppInit         = brackets.getModule("utils/AppInit"),
+		CommandManager  = brackets.getModule("command/CommandManager"),
+		ExtensionUtils  = brackets.getModule("utils/ExtensionUtils"),
+		Menus           = brackets.getModule("command/Menus");
+	
 
 	var FileManager = require("src/FileManager");
 
 
-	var Logger = require("src/Logger"),
-		Main   = require("src/Main");
+	var Logger    = require("src/Logger"),
+		Main      = require("src/Main"),
+		Languages = require("src/Languages");
 
 	// Load stylesheet
 	ExtensionUtils.loadStyleSheet(module, "styles/brackets-remote-editor.less");
