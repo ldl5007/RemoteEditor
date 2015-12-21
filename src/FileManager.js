@@ -8,6 +8,7 @@ define (function (require, exports) {
 	var Globals     = require("src/Globals"),
 		File        = require("src/FileInfo"),
 		Logger      = require("src/Logger"),
+		Panel       = require("src/Panel"),
 		Preferences = require("src/Preferences");
 
 	var fileInventory = null;
@@ -49,7 +50,9 @@ define (function (require, exports) {
 	function testingDebug() {
 		Logger.consoleDebug("testingDebug()");
 
+		var newFile = new File.FileInfo("testing1", "testing2", "testing3");
 
+		Panel.insertNewRow(newFile);
 	}
 
 	exports.testingDebug  = testingDebug;

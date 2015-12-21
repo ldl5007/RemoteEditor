@@ -1,3 +1,5 @@
+@import "colors.less";
+@import "common.less";
 
 /* Toolbar icon */
 #remote-editor-icon {
@@ -29,4 +31,30 @@
     &.error.dirty {
         background-position: -24px -96px;
     }
+}
+
+#file-table {
+	table {
+		border-collapse: collapse;
+	}
+	th {
+		text-align: center;
+	}
+	td, th {
+		height: 15px;
+		padding: 3px;
+	}
+	.col-1 {
+		width: 5%;
+		text-align: center;
+	}
+	.col-2 {
+		text-align: left;
+	}
+	.col-3 {
+		text-align: left;
+	}
+	.col-4 {
+		text-align: left;
+	}
 }
