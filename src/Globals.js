@@ -1,5 +1,5 @@
-define (function (require, exports) {
-	'user strict'
+define(function (require, exports) {
+	'use strict';
 
 	exports.PRODUCT_PREFIX = "Remote_Editor";
 
