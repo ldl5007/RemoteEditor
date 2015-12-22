@@ -27,6 +27,37 @@
 /*global define */
 
 define({
+
+	EXT_NAME: "[ReEd]",
+	LOADING: "Loading\u2026",
+	ADD_FILE: "Add File",
+	REMOVE_FILE: "Remove File",
+
+	DIALOG_TITLE_LIST_SELECTION: "List Selection Dialog",
+	DIALOG_TITLE_ADD_SITE:       "Add FTP Site",
+	DIALOG_CHMOD_NUMERIC_VALUE:  "Numeric Value",
+	DIALOG_CHMOD_GROUP_PUBLIC:   "Public permissions",
+	DIALOG_CHMOD_GROUP_GROUP:    "Group permissions",
+	DIALOG_CHMOD_GROUP_OWNER:    "Owner permissions",
+
+	DIALOG_INPUT_NAME: "Site Name:",
+	DIALOG_INPUT_HOST: "Host:",
+	DIALOG_INPUT_ROOT: "Root:",
+	DIALOG_INPUT_USER: "User:",
+	DIALOG_INPUT_PASSWORD: "Password:",
+
+	DIALOG_SERVER_TYPE: "Server Type:",
+	DIALOG_TOGGLE_CHMOD: "Set Permission",
+
+	BUTTON_CANCEL:  "cancel",
+	BUTTON_REMOVE:  "remove",
+	BUTTON_SAVE:    "save",
+	BUTTON_OK:      "ok",
+
+	CHECKBOX_READ: "Read",
+	CHECKBOX_WRITE: "Write",
+	CHECKBOX_EXECUTE: "Execute",
+
     "MY_DOCUMENTS"                      : "My Documents",
     "DOCUMENTS"                         : "Documents",
     "MENU_TITLE"                        : "New Project…",

@@ -1,0 +1,20 @@
+/**
+ * See http://jshint.com/docs/ &
+ * https://github.com/jshint/jshint/blob/master/examples/.jshintrc
+ */
+{
+	//enforcing
+	"undef": true, 				//warn if variables are used without being defined
+	"unused": true, 			//warn if unused variables
+	//environments
+	"browser": true, 			//define browser globals
+	"devel": true, 				//allow for console.log
+	"jasmine": true, 			//allow for jasmine
+	//custom globals
+	"globals": {
+		"brackets": false, 		//define brackets core loader
+		"define": false, 		//define brackets 'define' funciton
+		"Mustache": false, 		//allow for Mustache
+		"$": false 				//ignore jQuery statements for warnings
+	}
+}
