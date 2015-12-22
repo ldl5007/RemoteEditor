@@ -17,7 +17,6 @@ define( function (require, exports, module) {
 	/**
 	 * Global variables
 	 */
-	var osFtpPackageJson;
 
     var defaultPreferences = {
         // features

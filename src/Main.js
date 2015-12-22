@@ -20,7 +20,7 @@ define(function (require, exports) {
 
 
 	function init(){
-		Logger.consoleDebug("Main.init()")
+		Logger.consoleDebug("Main.init()");
 		AppInit.htmlReady(function() {
 			$icon.removeClass("loading").removeAttr("title");
 
