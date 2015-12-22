@@ -19,7 +19,7 @@ define(function (require, exports) {
 	function keywords(string) {
 		return string.split(' ');
 	}
-			
+
 	/**
 	 * This function will generate a keyword object based on
 	 * multiple keyword arrays.
@@ -31,12 +31,12 @@ define(function (require, exports) {
 	 */
 	function addKeywords(styles, array) {
 		var object = {};
-		
+
 		//Loop through each array passed
-		for(var arg = 1; arg < arguments.length; arg++){
+		for (var arg = 1; arg < arguments.length; arg++) {
 			//Get the array from the arguments
 			var array = arguments[arg];
-			
+
 			//Loop through each element in the array
 			for (var i = 0; i < array.length; i++) {
 				object[array[i]] = styles[arg - 1];
@@ -53,7 +53,7 @@ define(function (require, exports) {
 		"forever fp2c fp2x insert int intcmd intread iterate leave left log log10 lower max min noyes nparse " +
 		"null0 parse pause pos random remstr resume right seccall selstr sin socket space sqrt substr translate " +
 		"typechk upper vartable word wordlength wordpos words write wto x2c x2d x2fp zfeature");
-	
+
 	//Generate the keywords object
 	var espKeywords = addKeywords(["keyword", "keyword", "builtin"], wordOperators, controlOperators, builtins);;
 
@@ -67,12 +67,13 @@ define(function (require, exports) {
 	//This is the entire definition for the esp language. After defining it here, we are
 	//able to add it through the LanguageManager in brackets
 	CodeMirror.defineMode("esp", function (config, parserConfig) {
-		var wordRE = parserConfig.wordCharacters || /[\w$\xa1-\uffff]/;
-		var number = /[0-9]/;
-		
+		var wordRE = parserConfig.wordCharacters || /[\w$#\xa1-\uffff]/;
+		var number = /[0-9]/;		
+		var isOperator = /[+\-*\/%=\\<>|]/;
+
 		function tokenBase(stream, state) {
 			var char = stream.next();
-			
+
 			/******************************************/
 			/********* CHECK FOR STRING ***************/
 			/******************************************/
@@ -80,68 +81,84 @@ define(function (require, exports) {
 				state.tokenize = tokenString(char);
 				return state.tokenize(stream, state);
 			}
-			/*else if(char == '&'){
-				stream.eatWhile(/[^/S{}()]/);	
-			}*/
+			/******************************************/
+			/********* CHECK FOR OPERATORS ************/
+			/******************************************/
+			else if (isOperator.test(char)) {
+				//check for comments
+				if ((char == '-' || char == '/') && stream.eat('*')) {
+					/******************************************/
+					/********* CHECK FOR BLOCK COMMENT ********/
+					/******************************************/
+					if(char == '/'){
+						state.tokenize = tokenBlockComment;
+						return state.tokenize(stream, state);
+					} 
+					/******************************************/
+					/********* CHECK FOR LINE COMMENT *********/
+					/******************************************/
+					else{
+						stream.skipToEnd();
+						return "comment";
+					}
+				}
+				//Parse as an operator
+				else {
+					//Eat all the operator characters
+					stream.eatWhile(isOperator);
+					return "operator";
+				}
+			} 
+			//VARIABLES
+			else if (char == '&') {
+				stream.eatWhile(wordRE);
+				
+				//Keep track if this is a variable or a stem
+				if (state.lastState == "variable" || state.lastState == "property") {
+					if(/[{(]/.test(state.lastToken)){
+						return "property";
+					}else{
+						return "variable";
+					}
+				}
+
+				return "variable";
+			}
 			/******************************************/
 			/********* CHECK FOR NUMBERS **************/
 			/******************************************/
-			else if(char == '.'){
-				console.log(state.lastState);
-				
+			else if (char == '.') {
+				//@TODO handle switch case
 				//Handle variables with . in them
-				if(state.lastState == "variable"){
-					stream.eatWhile(number);
-					
+				if (state.lastState == "variable" || state.lastState == "property" || state.lastState == "number") {
+					stream.eatWhile(wordRE);
+
 					return "property";
 				} else {
 					//Eat all of the numbers
-					if(stream.eat(number)){
+					if (stream.eat(number)) {
 						stream.eatWhile(number);
 						return "number";
 					}
 				}
-			} else if(number.test(char)){
+			} else if (number.test(char)) {
 				stream.eatWhile(number);
-				if(stream.eat('.')){
+				if (stream.eat('.')) {
 					stream.eatWhile(number);
 				}
 				return "number";
-			}
-			/******************************************/
-			/********* CHECK FOR BLOCK COMMENT ********/
-			/******************************************/
-			else if (char == "/") {
-				if (stream.eat('*')) {
-					state.tokenize = tokenBlockComment;
-					return state.tokenize(stream, state);
-				}
-
-				return "operator";
-			}
-			/******************************************/
-			/********* CHECK FOR LINE COMMENT *********/
-			/******************************************/
-			else if (char == '-') {
-				if (stream.eat('*')) {
-					stream.skipToEnd();
-					return "comment";
-				}
-
-				return "operator"
 			}
 			/******************************************/
 			/********* CHECK FOR KEYWORDS *************/
 			/******************************************/
 			else if (wordRE.test(char)) {
 				stream.eatWhile(wordRE);
-				var word = stream.current().toLowerCase(), known = espKeywords.propertyIsEnumerable(word) && espKeywords[word];				
+				var word = stream.current().toLowerCase(),
+					known = espKeywords.propertyIsEnumerable(word) && espKeywords[word];
 				return (known && state.lastType != ".") ? known : "variable";
 			}
 		}
-		//Operators	
-		//                 + - * / ** // % = \= < > <= >= == \== << >> <<= >>=
-
+		
 		/**
 		 * This function will generate a function to parse through a
 		 * string based on the entry character
@@ -199,21 +216,48 @@ define(function (require, exports) {
 			return "comment";
 		}
 
+		//var cx = {state: null, column: null, marked: null, cc: null};
 
-		/*
-		function tokenKeywords(stream, state){
+		//@TODO FIGURE THIS SHIT OUT
+		/*	function JSLexical(indented, column, type, align, prev, info) {
+				this.indented = indented;
+				this.column = column;
+				this.type = type;
+				this.prev = prev;
+				this.info = info;
+				if (align != null) this.align = align;
+			  }
 			
-		}*/
+			function pushlex(type, info) {
+				var result = function () {
+					var state = cx.state,
+						indent = state.indented;
+					if (state.lexical.type == "stat") indent = state.lexical.indented;
+					else
+						for (var outer = state.lexical; outer && outer.type == ")" && outer.align; outer = outer.prev)
+							indent = outer.indented;
+					state.lexical = new JSLexical(indent, cx.stream.column(), type, null, state.lexical, info);
+				};
+				result.lex = true;
+				return result;
+			}
 
-
+			function poplex() {
+				var state = cx.state;
+				if (state.lexical.prev) {
+					if (state.lexical.type == ")")
+						state.indented = state.lexical.indented;
+					state.lexical = state.lexical.prev;
+				}
+			}*/
 
 		function tokenLexer(stream, state) {
 			var style = state.tokenize(stream, state);
 			var current = stream.current();
 
-
-			if ((style == "variable" || style == "builtin") && state.lastToken == "meta")
-				style = "meta";
+			/*
+						if ((style == "variable" || style == "builtin") && state.lastToken == "meta")
+							style = "meta";*/
 
 			// Handle scope changes.
 			/*if (current == "pass" || current == "return")
@@ -262,18 +306,18 @@ define(function (require, exports) {
 			token: function (stream, state) {
 				var addErr = state.errorToken;
 				if (addErr) state.errorToken = false;
-				
+
 				var style = tokenLexer(stream, state);
 				var token = stream.current();
-				
-				if(token){
+
+				if (token) {
 					state.lastToken = token;
 				}
-				
-				if(style){
+
+				if (style) {
 					state.lastState = style;
 				}
-				
+
 				/*
 				state.lastToken 
 				if (style && style != "comment")
