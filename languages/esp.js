@@ -7,787 +7,215 @@ define(function (require, exports) {
 	//I'm figuring this out as I go so the comments will become more indepth as time
 	//goes on.
 
+	//Load the required module
+	var CodeMirror = brackets.getModule('thirdparty/CodeMirror/lib/codemirror');
+
+	function keywords(string) {
+		return string.split(' ');
+	}
+
+	//Define keywords as arrays
+	var wordOperators = keywords("and not noshare on or share to");
+	var controlOperators = keywords("assign call do else end exit gosub procedure otherwise retsub return select then when while");
+	var builtins = keywords("a2e abs appc args b2c bitand bitor bitxor c2b c2d c2fp c2x control copies cos d2c d2x date delay e2a " +
+		"forever fp2c fp2x insert int intcmd intread iterate leave left log log10 lower max min noyes nparse " +
+		"null0 parse pause pos random remstr resume right seccall selstr sin socket space sqrt substr translate " +
+		"typechk upper vartable word wordlength wordpos words write wto x2c x2d x2fp zfeature");
+
+	//Register code helpers
+	CodeMirror.registerHelper("hintWords", "esp", controlOperators.concat(builtins));
+
+	function top(state) {
+		return state.scopes[state.scopes.length - 1];
+	}
+
 	//This is the entire definition for the esp language. After defining it here, we are
 	//able to add it through the LanguageManager in brackets
 	CodeMirror.defineMode("esp", function (config, parserConfig) {
-		//Init variables
-		var indentUnit = config.indentUnit;
-		var statementIndent = parserConfig.statementIndent;
-		var wordRE = parserConfig.wordCharacters || /[\w$\xa1-\uffff]/;
 
-		var keywords = function () {
-			//Define a function that will return a keyword format
-			function kw(type) {
-				return {
-					type: type,
-					style: "keyword"
-				}
-			}
-
-			//Define keyword functions
-			var A = kw("keyword a"),
-				B = kw("keyword b"),
-				C = kw("keyword c"),
-				operator = kw("operator"),
-				atom = {
-					type: "atom",
-					style: "atom"
-				};
-			
-			var keywordA = 'else do end then procedure select otherwise when while',
-				keywordB = 'assign gosub retsub call exit return',
-				keywordC = 'seccall intcmd intread pause resume appc write vartable wto socket control nparse iterate leave forever parse args delay abs b2c a2e bitor bitxor bitand copies c2b c2d c2x c2fp date d2x d2c e2a fp2c fp2x insert int log log10 lower upper max min sqrt noyes right left random pos null0 remstr selstr sin cos space substr translate typechk word words zfeature x2c x2d x2fp wordpos wordlength',
-				operators = 'on share noshare not to and or';
-
-			//Define all of the keywords that are esp specific
-			var keywords = {
-				"if": kw("if"),
-				"function": kw("function")
-			}
-			
-			var addStringToList = function(string, object){
-				var addArray = string.split(" ");
-				
-				for(var i = 0; i<addArray.length; i++){
-					keywords[addArray[i]] = object;
-				}
-			}
-			
-			addStringToList(keywordA, A);
-			addStringToList(keywordB, B);
-			addStringToList(keywordC, C);
-			addStringToList(operators, operator);
-
-			return keywords;
-		}
-
-		var espKeywords = keywords();
-		var isOperatorChar = /[+\-*&%=<>!?|~^(||)]/;
-
-		// Used as scratch variables to communicate multiple values without
-		// consing up tons of objects.
-		var type, content;
-
-		function ret(tp, style, cont) {
-			type = tp;
-			content = cont;
-			return style;
-		}
 
 		function tokenBase(stream, state) {
-			var ch = stream.next();
-			if (ch == '"' || ch == "'") {
-				state.tokenize = tokenString(ch);
+			var char = stream.next();
+
+			/******************************************/
+			/********* CHECK FOR STRING ***************/
+			/******************************************/
+			if (char == '"' || char == "'") {
+				state.tokenize = tokenString(char);
 				return state.tokenize(stream, state);
-			} else if (ch == "." && stream.match(/^\d+(?:[eE][+\-]?\d+)?/)) {
-				return ret("number", "number");
-			} else if (ch == "." && stream.match("..")) {
-				return ret("spread", "meta");
-			} else if (/[\[\]{}\(\),;\:\.]/.test(ch)) {
-				return ret(ch);
-			} else if (ch == "=" && stream.eat(">")) {
-				return ret("=>", "operator");
-			} else if (ch == "0" && stream.eat(/x/i)) {
-				stream.eatWhile(/[\da-f]/i);
-				return ret("number", "number");
-			} else if (ch == "0" && stream.eat(/o/i)) {
-				stream.eatWhile(/[0-7]/i);
-				return ret("number", "number");
-			} else if (ch == "0" && stream.eat(/b/i)) {
-				stream.eatWhile(/[01]/i);
-				return ret("number", "number");
-			} else if (/\d/.test(ch)) {
-				stream.match(/^\d*(?:\.\d*)?(?:[eE][+\-]?\d+)?/);
-				return ret("number", "number");
 			}
-			/***********************************/
-			/******* BLOCK COMMENTS ************/
-			/***********************************/
-			else if (ch == "/") {
-				if (stream.eat("*")) {
-					state.tokenize = tokenComment;
-					return tokenComment(stream, state);
-				} else if (stream.eat("/")) {
-					stream.skipToEnd();
-					return ret("comment", "comment");
-				} else if (/^(?:operator|sof|keyword c|case|new|[\[{}\(,;:])$/.test(state.lastType) ||
-					(state.lastType == "quasi" && /\{\s*$/.test(stream.string.slice(0, stream.pos - 1)))) {
-					readRegexp(stream);
-					stream.match(/^\b(([gimyu])(?![gimyu]*\2))+\b/);
-					return ret("regexp", "string-2");
-				} else {
-					stream.eatWhile(isOperatorChar);
-					return ret("operator", "operator", stream.current());
+			/******************************************/
+			/********* CHECK FOR BLOCK COMMENT ********/
+			/******************************************/
+			else if(char == "/"){
+				if(stream.eat('*')){
+					state.tokenize = tokenBlockComment;
+					return state.tokenize(stream, state);
 				}
-			}
-			/***********************************/
-			/******* LINE COMMENTS *************/
-			/***********************************/
-			else if (ch == "-") {
-				if (stream.eat("*")) {
+				
+				return "operator";
+			} 
+			/******************************************/
+			/********* CHECK FOR LINE COMMENT *********/
+			/******************************************/
+			else if(char == '-'){
+				if(stream.eat('*')){
 					stream.skipToEnd();
-					return ret("comment", "comment");
+					return "comment";
 				}
-			}
-
-			/***********************************/
-			/******* KEYWORDS ******************/
-			/***********************************/
-			else if (wordRE.test(ch)) {
-				stream.eatWhile(wordRE);
-				var word = stream.current().toLowerCase(), //Casing is not important in ESP so normalize everything to lower case
-					known = espKeywords.propertyIsEnumerable(word) && espKeywords[word];
-
-
-				return (known && state.lastType != ".") ? ret(known.type, known.style, word) :
-					ret("variable", "variable", word);
+				
+				return "operator"
 			}
 		}
 
+		/**
+		 * This function will generate a function to parse through a
+		 * string based on the entry character
+		 * 
+		 * @param   {string}   quote The string entry character
+		 * @returns {function} The parsing function that should be called
+		 */
 		function tokenString(quote) {
 			return function (stream, state) {
+				//Init variables
 				var escaped = false,
 					next;
 
+				//Loop through each character until we find the end
+				//of the string
 				while ((next = stream.next()) != null) {
+					//Break if the starting quote was found
+					//and the previous character wasn't an
+					//escape character.
 					if (next == quote && !escaped) break;
+
+					//Found a \ so escape the string
 					escaped = !escaped && next == "\\";
 				}
-				if (!escaped) state.tokenize = tokenBase;
-				return ret("string", "string");
-			};
-		}
 
-		function tokenComment(stream, state) {
-			var maybeEnd = false,
-				ch;
-			while (ch = stream.next()) {
-				if (ch == "/" && maybeEnd) {
+				if (!escaped) state.tokenize = tokenBase;
+
+				//Return that this is a string
+				return "string";
+			}
+		}
+		
+		/**
+		 * This function will tokenize a block comment
+		 * @param   {object} stream The current stream
+		 * @param   {object} state  The current state
+		 * @returns {string} The style to report back to the caller
+		 */
+		function tokenBlockComment(stream, state){
+			//Init variables
+			var foundStar = false, char;
+			
+			while(char = stream.next()){
+				//Conditions that need to be matched to
+				//exit the comment
+				if(foundStar && char == "/"){
 					state.tokenize = tokenBase;
 					break;
 				}
-				maybeEnd = (ch == "*");
+				
+				foundStar = (char == "*");
 			}
-			return ret("comment", "comment");
+			
+			return "comment";
 		}
+		
+		
 
-		var atomicTypes = {
-			"atom": true,
-			"number": true,
-			"variable": true,
-			"string": true,
-			"regexp": true,
-			"this": true,
-			"jsonld-keyword": true
-		};
+		function tokenLexer(stream, state) {
+			var style = state.tokenize(stream, state);
+			var current = stream.current();
 
-		function ESPLexical(indented, column, type, align, prev, info) {
-			this.indented = indented;
-			this.column = column;
-			this.type = type;
-			this.prev = prev;
-			this.info = info;
-			if (align != null) this.align = align;
-		}
 
-		function inScope(state, varname) {
-			for (var v = state.localVars; v; v = v.next)
-				if (v.name == varname) return true;
-			for (var cx = state.context; cx; cx = cx.prev) {
-				for (var v = cx.vars; v; v = v.next)
-					if (v.name == varname) return true;
+			if ((style == "variable" || style == "builtin") && state.lastToken == "meta")
+				style = "meta";
+
+			// Handle scope changes.
+			/*if (current == "pass" || current == "return")
+				state.dedent += 1;*/
+			
+			/*
+
+			if (current == "lambda") state.lambda = true;
+			if (current == ":" && !state.lambda && top(state).type == "py")
+				pushScope(stream, state, "py");
+
+			var delimiter_index = current.length == 1 ? "[({".indexOf(current) : -1;
+			if (delimiter_index != -1)
+				pushScope(stream, state, "])}".slice(delimiter_index, delimiter_index + 1));
+
+			delimiter_index = "])}".indexOf(current);
+			if (delimiter_index != -1) {
+				if (top(state).type == current) state.scopes.pop();
+				else return ERRORCLASS;
 			}
+			if (state.dedent > 0 && stream.eol() && top(state).type == "py") {
+				if (state.scopes.length > 1) state.scopes.pop();
+				state.dedent -= 1;
+			}*/
+
+			return style;
 		}
 
-		function parseESP(state, style, type, content, stream) {
-			var cc = state.cc;
-			// Communicate our context to the combinators.
-			// (Less wasteful than consing up a hundred closures on every call.)
-			cx.state = state;
-			cx.stream = stream;
-			cx.marked = null, cx.cc = cc;
-			cx.style = style;
 
-			if (!state.lexical.hasOwnProperty("align"))
-				state.lexical.align = true;
-
-			while (true) {
-				var combinator = cc.length ? cc.pop() : statement;
-				if (combinator(type, content)) {
-					while (cc.length && cc[cc.length - 1].lex)
-						cc.pop()();
-					if (cx.marked) return cx.marked;
-					if (type == "variable" && inScope(state, content)) return "variable-2";
-					return style;
-				}
-			}
-		}
-
-		var cx = {
-			state: null,
-			column: null,
-			marked: null,
-			cc: null
-		};
-
-		function pass() {
-			for (var i = arguments.length - 1; i >= 0; i--) cx.cc.push(arguments[i]);
-		}
-
-		function cont() {
-			pass.apply(null, arguments);
-			return true;
-		}
-
-		function register(varname) {
-			function inList(list) {
-				for (var v = list; v; v = v.next)
-					if (v.name == varname) return true;
-				return false;
-			}
-			var state = cx.state;
-			cx.marked = "def";
-			if (state.context) {
-				if (inList(state.localVars)) return;
-				state.localVars = {
-					name: varname,
-					next: state.localVars
-				};
-			} else {
-				if (inList(state.globalVars)) return;
-				if (parserConfig.globalVars)
-					state.globalVars = {
-						name: varname,
-						next: state.globalVars
-					};
-			}
-		}
-
-		// Combinators
-
-		var defaultVars = {
-			name: "this",
-			next: {
-				name: "arguments"
-			}
-		};
-
-		function pushcontext() {
-			cx.state.context = {
-				prev: cx.state.context,
-				vars: cx.state.localVars
-			};
-			cx.state.localVars = defaultVars;
-		}
-
-		function popcontext() {
-			cx.state.localVars = cx.state.context.vars;
-			cx.state.context = cx.state.context.prev;
-		}
-
-		function pushlex(type, info) {
-			var result = function () {
-				var state = cx.state,
-					indent = state.indented;
-				if (state.lexical.type == "stat") indent = state.lexical.indented;
-				else
-					for (var outer = state.lexical; outer && outer.type == ")" && outer.align; outer = outer.prev)
-						indent = outer.indented;
-				state.lexical = new ESPLexical(indent, cx.stream.column(), type, null, state.lexical, info);
-			};
-			result.lex = true;
-			return result;
-		}
-
-		function poplex() {
-			var state = cx.state;
-			if (state.lexical.prev) {
-				if (state.lexical.type == ")")
-					state.indented = state.lexical.indented;
-				state.lexical = state.lexical.prev;
-			}
-		}
-		poplex.lex = true;
-
-		function expect(wanted) {
-			function exp(type) {
-				if (type == wanted) return cont();
-				else if (wanted == ";") return pass();
-				else return cont(exp);
-			};
-			return exp;
-		}
-
-		function statement(type, value) {
-			//console.log(type, value);
-			//if (type == "var") return cont(pushlex("vardef", value.length), vardef, expect(";"), poplex);
-			if (type == "keyword a") return cont(pushlex("form"), expression, statement, poplex);
-			if (type == "keyword b") return cont(pushlex("form"), statement, poplex);
-			if (type == "{") return cont(pushlex("}"), block, poplex);
-			if (type == ";") return cont();
-			if (type == "if") {
-				if (cx.state.lexical.info == "else" && cx.state.cc[cx.state.cc.length - 1] == poplex)
-					cx.state.cc.pop()();
-				return cont(pushlex("form"), expression, statement, poplex, maybeelse);
-			}
-			if (type == "function") return cont(functiondef);
-			if (type == "for") return cont(pushlex("form"), forspec, statement, poplex);
-			if (type == "variable") return cont(pushlex("stat"), maybelabel);
-			if (type == "switch") return cont(pushlex("form"), expression, pushlex("}", "switch"), expect("{"),
-				block, poplex, poplex);
-			if (type == "case") return cont(expression, expect(":"));
-			if (type == "default") return cont(expect(":"));
-			if (type == "catch") return cont(pushlex("form"), pushcontext, expect("("), funarg, expect(")"),
-				statement, poplex, popcontext);
-			if (type == "class") return cont(pushlex("form"), className, poplex);
-			if (type == "export") return cont(pushlex("stat"), afterExport, poplex);
-			if (type == "import") return cont(pushlex("stat"), afterImport, poplex);
-			if (type == "module") return cont(pushlex("form"), pattern, pushlex("}"), expect("{"), block, poplex, poplex)
-			return pass(pushlex("stat"), expression, expect(";"), poplex);
-		}
-
-		function expression(type) {
-			return expressionInner(type, false);
-		}
-
-		function expressionNoComma(type) {
-			return expressionInner(type, true);
-		}
-
-		function expressionInner(type, noComma) {
-			if (cx.state.fatArrowAt == cx.stream.start) {
-				var body = noComma ? arrowBodyNoComma : arrowBody;
-				if (type == "(") return cont(pushcontext, pushlex(")"), commasep(pattern, ")"), poplex, expect("=>"), body, popcontext);
-				else if (type == "variable") return pass(pushcontext, pattern, expect("=>"), body, popcontext);
-			}
-
-			var maybeop = noComma ? maybeoperatorNoComma : maybeoperatorComma;
-			if (atomicTypes.hasOwnProperty(type)) return cont(maybeop);
-			if (type == "function") return cont(functiondef, maybeop);
-			if (type == "keyword c") return cont(noComma ? maybeexpressionNoComma : maybeexpression);
-			if (type == "(") return cont(pushlex(")"), maybeexpression, comprehension, expect(")"), poplex, maybeop);
-			if (type == "operator" || type == "spread") return cont(noComma ? expressionNoComma : expression);
-			if (type == "[") return cont(pushlex("]"), arrayLiteral, poplex, maybeop);
-			if (type == "{") return contCommasep(objprop, "}", null, maybeop);
-			if (type == "quasi") return pass(quasi, maybeop);
-			if (type == "new") return cont(maybeTarget(noComma));
-			return cont();
-		}
-
-		function maybeexpression(type) {
-			if (type.match(/[;\}\)\],]/)) return pass();
-			return pass(expression);
-		}
-
-		function maybeexpressionNoComma(type) {
-			if (type.match(/[;\}\)\],]/)) return pass();
-			return pass(expressionNoComma);
-		}
-
-		function maybeoperatorComma(type, value) {
-			if (type == ",") return cont(expression);
-			return maybeoperatorNoComma(type, value, false);
-		}
-
-		function maybeoperatorNoComma(type, value, noComma) {
-			var me = noComma == false ? maybeoperatorComma : maybeoperatorNoComma;
-			var expr = noComma == false ? expression : expressionNoComma;
-			if (type == "=>") return cont(pushcontext, noComma ? arrowBodyNoComma : arrowBody, popcontext);
-			if (type == "operator") {
-				if (/\+\+|--/.test(value)) return cont(me);
-				if (value == "?") return cont(expression, expect(":"), expr);
-				return cont(expr);
-			}
-			if (type == "quasi") {
-				return pass(quasi, me);
-			}
-			if (type == ";") return;
-			if (type == "(") return contCommasep(expressionNoComma, ")", "call", me);
-			if (type == ".") return cont(property, me);
-			if (type == "[") return cont(pushlex("]"), maybeexpression, expect("]"), poplex, me);
-		}
-
-		function quasi(type, value) {
-			if (type != "quasi") return pass();
-			if (value.slice(value.length - 2) != "${") return cont(quasi);
-			return cont(expression, continueQuasi);
-		}
-
-		function continueQuasi(type) {
-			if (type == "}") {
-				cx.marked = "string-2";
-				cx.state.tokenize = tokenQuasi;
-				return cont(quasi);
-			}
-		}
-
-		function arrowBody(type) {
-			findFatArrow(cx.stream, cx.state);
-			return pass(type == "{" ? statement : expression);
-		}
-
-		function arrowBodyNoComma(type) {
-			findFatArrow(cx.stream, cx.state);
-			return pass(type == "{" ? statement : expressionNoComma);
-		}
-
-		function maybeTarget(noComma) {
-			return function (type) {
-				if (type == ".") return cont(noComma ? targetNoComma : target);
-				else return pass(noComma ? expressionNoComma : expression);
-			};
-		}
-
-		function target(_, value) {
-			if (value == "target") {
-				cx.marked = "keyword";
-				return cont(maybeoperatorComma);
-			}
-		}
-
-		function targetNoComma(_, value) {
-			if (value == "target") {
-				cx.marked = "keyword";
-				return cont(maybeoperatorNoComma);
-			}
-		}
-
-		function maybelabel(type) {
-			if (type == ":") return cont(poplex, statement);
-			return pass(maybeoperatorComma, expect(";"), poplex);
-		}
-
-		function property(type) {
-			if (type == "variable") {
-				cx.marked = "property";
-				return cont();
-			}
-		}
-
-		function objprop(type, value) {
-			if (type == "variable" || cx.style == "keyword") {
-				cx.marked = "property";
-				if (value == "get" || value == "set") return cont(getterSetter);
-				return cont(afterprop);
-			} else if (type == "number" || type == "string") {
-				cx.marked = jsonldMode ? "property" : (cx.style + " property");
-				return cont(afterprop);
-			} else if (type == "jsonld-keyword") {
-				return cont(afterprop);
-			} else if (type == "modifier") {
-				return cont(objprop)
-			} else if (type == "[") {
-				return cont(expression, expect("]"), afterprop);
-			} else if (type == "spread") {
-				return cont(expression);
-			}
-		}
-
-		function getterSetter(type) {
-			if (type != "variable") return pass(afterprop);
-			cx.marked = "property";
-			return cont(functiondef);
-		}
-
-		function afterprop(type) {
-			if (type == ":") return cont(expressionNoComma);
-			if (type == "(") return pass(functiondef);
-		}
-
-		function commasep(what, end) {
-			function proceed(type) {
-				if (type == ",") {
-					var lex = cx.state.lexical;
-					if (lex.info == "call") lex.pos = (lex.pos || 0) + 1;
-					return cont(what, proceed);
-				}
-				if (type == end) return cont();
-				return cont(expect(end));
-			}
-			return function (type) {
-				if (type == end) return cont();
-				return pass(what, proceed);
-			};
-		}
-
-		function contCommasep(what, end, info) {
-			for (var i = 3; i < arguments.length; i++)
-				cx.cc.push(arguments[i]);
-			return cont(pushlex(end, info), commasep(what, end), poplex);
-		}
-
-		function block(type) {
-			if (type == "}") return cont();
-			return pass(statement, block);
-		}
-
-		function maybetype(type) {
-			if (isTS && type == ":") return cont(typedef);
-		}
-
-		function maybedefault(_, value) {
-			if (value == "=") return cont(expressionNoComma);
-		}
-
-		function typedef(type) {
-			if (type == "variable") {
-				cx.marked = "variable-3";
-				return cont();
-			}
-		}
-
-		function vardef() {
-			return pass(pattern, maybetype, maybeAssign, vardefCont);
-		}
-
-		function pattern(type, value) {
-			if (type == "modifier") return cont(pattern)
-			if (type == "variable") {
-				register(value);
-				return cont();
-			}
-			if (type == "spread") return cont(pattern);
-			if (type == "[") return contCommasep(pattern, "]");
-			if (type == "{") return contCommasep(proppattern, "}");
-		}
-
-		function proppattern(type, value) {
-			if (type == "variable" && !cx.stream.match(/^\s*:/, false)) {
-				register(value);
-				return cont(maybeAssign);
-			}
-			if (type == "variable") cx.marked = "property";
-			if (type == "spread") return cont(pattern);
-			return cont(expect(":"), pattern, maybeAssign);
-		}
-
-		function maybeAssign(_type, value) {
-			if (value == "=") return cont(expressionNoComma);
-		}
-
-		function vardefCont(type) {
-			if (type == ",") return cont(vardef);
-		}
-
-		function maybeelse(type, value) {
-			if (type == "keyword b" && value == "else") return cont(pushlex("form", "else"), statement, poplex);
-		}
-
-		function forspec(type) {
-			if (type == "(") return cont(pushlex(")"), forspec1, expect(")"), poplex);
-		}
-
-		function forspec1(type) {
-			if (type == "var") return cont(vardef, expect(";"), forspec2);
-			if (type == ";") return cont(forspec2);
-			if (type == "variable") return cont(formaybeinof);
-			return pass(expression, expect(";"), forspec2);
-		}
-
-		function formaybeinof(_type, value) {
-			if (value == "in" || value == "of") {
-				cx.marked = "keyword";
-				return cont(expression);
-			}
-			return cont(maybeoperatorComma, forspec2);
-		}
-
-		function forspec2(type, value) {
-			if (type == ";") return cont(forspec3);
-			if (value == "in" || value == "of") {
-				cx.marked = "keyword";
-				return cont(expression);
-			}
-			return pass(expression, expect(";"), forspec3);
-		}
-
-		function forspec3(type) {
-			if (type != ")") cont(expression);
-		}
-
-		function functiondef(type, value) {
-			if (value == "*") {
-				cx.marked = "keyword";
-				return cont(functiondef);
-			}
-			if (type == "variable") {
-				register(value);
-				return cont(functiondef);
-			}
-			if (type == "(") return cont(pushcontext, pushlex(")"), commasep(funarg, ")"), poplex, statement, popcontext);
-		}
-
-		function funarg(type) {
-			if (type == "spread") return cont(funarg);
-			return pass(pattern, maybetype, maybedefault);
-		}
-
-		function className(type, value) {
-			if (type == "variable") {
-				register(value);
-				return cont(classNameAfter);
-			}
-		}
-
-		function classNameAfter(type, value) {
-			if (value == "extends") return cont(expression, classNameAfter);
-			if (type == "{") return cont(pushlex("}"), classBody, poplex);
-		}
-
-		function classBody(type, value) {
-			if (type == "variable" || cx.style == "keyword") {
-				if (value == "static") {
-					cx.marked = "keyword";
-					return cont(classBody);
-				}
-				cx.marked = "property";
-				if (value == "get" || value == "set") return cont(classGetterSetter, functiondef, classBody);
-				return cont(functiondef, classBody);
-			}
-			if (value == "*") {
-				cx.marked = "keyword";
-				return cont(classBody);
-			}
-			if (type == ";") return cont(classBody);
-			if (type == "}") return cont();
-		}
-
-		function classGetterSetter(type) {
-			if (type != "variable") return pass();
-			cx.marked = "property";
-			return cont();
-		}
-
-		function afterExport(_type, value) {
-			if (value == "*") {
-				cx.marked = "keyword";
-				return cont(maybeFrom, expect(";"));
-			}
-			if (value == "default") {
-				cx.marked = "keyword";
-				return cont(expression, expect(";"));
-			}
-			return pass(statement);
-		}
-
-		function afterImport(type) {
-			if (type == "string") return cont();
-			return pass(importSpec, maybeFrom);
-		}
-
-		function importSpec(type, value) {
-			if (type == "{") return contCommasep(importSpec, "}");
-			if (type == "variable") register(value);
-			if (value == "*") cx.marked = "keyword";
-			return cont(maybeAs);
-		}
-
-		function maybeAs(_type, value) {
-			if (value == "as") {
-				cx.marked = "keyword";
-				return cont(importSpec);
-			}
-		}
-
-		function maybeFrom(_type, value) {
-			if (value == "from") {
-				cx.marked = "keyword";
-				return cont(expression);
-			}
-		}
-
-		function arrayLiteral(type) {
-			if (type == "]") return cont();
-			return pass(expressionNoComma, maybeArrayComprehension);
-		}
-
-		function maybeArrayComprehension(type) {
-			if (type == "for") return pass(comprehension, expect("]"));
-			if (type == ",") return cont(commasep(maybeexpressionNoComma, "]"));
-			return pass(commasep(expressionNoComma, "]"));
-		}
-
-		function comprehension(type) {
-			if (type == "for") return cont(forspec, comprehension);
-			if (type == "if") return cont(expression, comprehension);
-		}
-
-		function isContinuedStatement(state, textAfter) {
-			return state.lastType == "operator" || state.lastType == "," ||
-				isOperatorChar.test(textAfter.charAt(0)) ||
-				/[,.]/.test(textAfter.charAt(0));
-		}
-
-		// Interface
 
 		return {
 			startState: function (basecolumn) {
-				var state = {
+				return {
 					tokenize: tokenBase,
-					lastType: "sof",
-					cc: [],
-					lexical: new ESPLexical((basecolumn || 0) - indentUnit, 0, "block", false),
-					localVars: parserConfig.localVars,
-					context: parserConfig.localVars && {
-						vars: parserConfig.localVars
-					},
-					indented: 0
+					scopes: [{
+						offset: basecolumn || 0,
+						type: "esp",
+						align: null
+					}],
+					lastToken: null,
+					lambda: false,
+					dedent: 0
 				};
-				if (parserConfig.globalVars && typeof parserConfig.globalVars == "object")
-					state.globalVars = parserConfig.globalVars;
-				return state;
 			},
+
 			token: function (stream, state) {
-				if (stream.sol()) {
-					if (!state.lexical.hasOwnProperty("align"))
-						state.lexical.align = false;
-					state.indented = stream.indentation();
-					//findFatArrow(stream, state);
-				}
-				if (state.tokenize != tokenComment && stream.eatSpace()) return null;
-				var style = state.tokenize(stream, state);
-				if (type == "comment") return style;
-				state.lastType = type == "operator" && (content == "++" || content == "--") ? "incdec" : type;
-				return parseESP(state, style, type, content, stream);
+				var addErr = state.errorToken;
+				if (addErr) state.errorToken = false;
+				var style = tokenLexer(stream, state);
+
+				if (style && style != "comment")
+					state.lastToken = (style == "keyword" || style == "punctuation") ? stream.current() : style;
+				
+				if (style == "punctuation") style = null;
+
+				/*if (stream.eol() && state.lambda)
+					state.lambda = false;*/
+				//return addErr ? style  : style;
+				
+				return style;
 			},
 
 			indent: function (state, textAfter) {
-				if (state.tokenize == tokenComment) return CodeMirror.Pass;
-				if (state.tokenize != tokenBase) return 0;
-				var firstChar = textAfter && textAfter.charAt(0),
-					lexical = state.lexical;
-				// Kludge to prevent 'maybelse' from blocking lexical scope pops
-				if (!/^\s*else\b/.test(textAfter))
-					for (var i = state.cc.length - 1; i >= 0; --i) {
-						var c = state.cc[i];
-						if (c == poplex) lexical = lexical.prev;
-						else if (c != maybeelse) break;
-					}
-				if (lexical.type == "stat" && firstChar == "}") lexical = lexical.prev;
-				if (statementIndent && lexical.type == ")" && lexical.prev.type == "stat")
-					lexical = lexical.prev;
-				var type = lexical.type,
-					closing = firstChar == type;
+				/*if (state.tokenize != tokenBase)
+					return state.tokenize.isString ? CodeMirror.Pass : 0;
 
-				if (type == "vardef") return lexical.indented + (state.lastType == "operator" || state.lastType == "," ? lexical.info + 1 : 0);
-				else if (type == "form" && firstChar == "{") return lexical.indented;
-				else if (type == "form") return lexical.indented + indentUnit;
-				else if (type == "stat")
-					return lexical.indented + (isContinuedStatement(state, textAfter) ? statementIndent || indentUnit : 0);
-				else if (lexical.info == "switch" && !closing && parserConfig.doubleIndentSwitch != false)
-					return lexical.indented + (/^(?:case|default)\b/.test(textAfter) ? indentUnit : 2 * indentUnit);
-				else if (lexical.align) return lexical.column + (closing ? 0 : 1);
-				else return lexical.indented + (closing ? 0 : indentUnit);
+				var scope = top(state);
+				var closing = textAfter && textAfter.charAt(0) == scope.type;
+				if (scope.align != null)
+					return scope.align - (closing ? 1 : 0);
+				else if (closing && state.scopes.length > 1)
+					return state.scopes[state.scopes.length - 2].offset;
+				else
+					return scope.offset;*/
+				
+				return 0;
 			},
 
-			electricInput: /^\s*(?:case .*?:|default:|\{|\})$/,
+			closeBrackets: "(){}''\"\"",
 			blockCommentStart: "/*",
 			blockCommentEnd: "*/",
-			lineComment: "//",
-			fold: "brace",
-			closeBrackets: "()[]{}''\"\"``",
-			helperType: "esp"
-		};
-
+			lineComment: "-*",
+			fold: "indent"
+		}
 	});
 });
