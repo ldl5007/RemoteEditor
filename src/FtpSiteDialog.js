@@ -39,7 +39,7 @@ define(function (require, exports) {
 	function setValues(inputSite){
         // Set server types list:
 		for (var i in SERVER_TYPES){
-			$("#osftp-ftp-site-serverType", $dialog)
+			$("#ftp-site-serverType", $dialog)
 				.append($("<option></options>")
 				.attr("value", i.toString())
 				.text(SERVER_TYPES[i]));
@@ -48,11 +48,11 @@ define(function (require, exports) {
 		// If input is a site then fill in the fields with info
 		if (SitesManager.validateSite(inputSite)){
 
-			$("#osftp-ftp-site-siteName", $dialog).val(inputSite.name);
-			$("#osftp-ftp-site-hostName", $dialog).val(inputSite.hostAddr);
-			$("#osftp-ftp-site-rootDir",  $dialog).val(inputSite.rootDir);
-			$("#osftp-ftp-site-userName", $dialog).val(inputSite.userName);
-			$("#osftp-ftp-site-password", $dialog).val(inputSite.password);
+			$("#ftp-site-siteName", $dialog).val(inputSite.name);
+			$("#ftp-site-hostName", $dialog).val(inputSite.hostAddr);
+			$("#ftp-site-rootDir",  $dialog).val(inputSite.rootDir);
+			$("#ftp-site-userName", $dialog).val(inputSite.userName);
+			$("#ftp-site-password", $dialog).val(inputSite.password);
 
 			if (osftpCommon.isSet(inputSite.getChmodStr())){
 				setChmodMode(inputSite.chmodStr);
@@ -60,7 +60,7 @@ define(function (require, exports) {
 			}
 
             // set remote OS
-            $('#osftp-ftp-site-serverType', $dialog).val(SERVER_TYPES.indexOf(inputSite.getRemoteOs()));
+            $('#ftp-site-serverType', $dialog).val(SERVER_TYPES.indexOf(inputSite.getRemoteOs()));
             updateServerType();
 
 			isEditMode = true;
@@ -93,17 +93,17 @@ define(function (require, exports) {
 
 	function collectValues(){
 		// If all is pass then collect data
-		var site = SitesManager.newSite($("#osftp-ftp-site-siteName", $dialog).val().replace(/\s+/g, '-'),
-										$("#osftp-ftp-site-hostName", $dialog).val(),
-										$("#osftp-ftp-site-rootDir",  $dialog).val(),
-										$("#osftp-ftp-site-userName", $dialog).val(),
-										$("#osftp-ftp-site-password", $dialog).val());
+		var site = SitesManager.newSite($("#ftp-site-siteName", $dialog).val().replace(/\s+/g, '-'),
+										$("#ftp-site-hostName", $dialog).val(),
+										$("#ftp-site-rootDir",  $dialog).val(),
+										$("#ftp-site-userName", $dialog).val(),
+										$("#ftp-site-password", $dialog).val());
 
 		if ($('#toggle-chmod-option', $dialog).prop("checked")){
 			site.setChmodStr(getChmodModeString());
 		}
 
-        site.setRemoteOs($('#osftp-ftp-site-serverType option:selected', $dialog).text());
+        site.setRemoteOs($('#ftp-site-serverType option:selected', $dialog).text());
 
 		site.debugPrint();
 
@@ -113,15 +113,15 @@ define(function (require, exports) {
 
 	function validateInputs(){
 
-		var siteName = $("#osftp-ftp-site-siteName", $dialog).val();
-		var hostName = $("#osftp-ftp-site-hostName", $dialog).val();
+		var siteName = $("#ftp-site-siteName", $dialog).val();
+		var hostName = $("#ftp-site-hostName", $dialog).val();
 
 		/**
 		 * Save these variable inputs but comment them to remove JSHint errors
 		 */
-		//var rootDir  = $("#osftp-ftp-site-rootDir",  $dialog).val();
-		//var userName = $("#osftp-ftp-site-userName", $dialog).val();
-		//var password = $("#osftp-ftp-site-password", $dialog).val();
+		//var rootDir  = $("#ftp-site-rootDir",  $dialog).val();
+		//var userName = $("#ftp-site-userName", $dialog).val();
+		//var password = $("#ftp-site-password", $dialog).val();
 
 		if (!isEditMode){
 			if (!osftpCommon.isSet(siteName)){
@@ -155,12 +155,12 @@ define(function (require, exports) {
 	}
 
 	function setErrorMessage(message){
-		$("#osftp-ftp-site-inputErrorMessage").text(message);
+		$("#ftp-site-inputErrorMessage").text(message);
 	}
 
     function hideChmodOption(){
         isChmodOpstionShow = false;
-        $('#osftp-ftp-input-chmod-option', $dialog).hide();
+        $('#ftp-input-chmod-option', $dialog).hide();
 
         $("*[chmodOption]", $dialog).each(function(){
             $(this).hide();
@@ -169,7 +169,7 @@ define(function (require, exports) {
 
     function showChmodOption(){
         isChmodOpstionShow = true;
-        $('#osftp-ftp-input-chmod-option', $dialog).show();
+        $('#ftp-input-chmod-option', $dialog).show();
         updateChmodOption();
     }
 
@@ -185,7 +185,7 @@ define(function (require, exports) {
 
     function updateServerType(){
         console.log('serverType changed');
-        var serverType =  $('#osftp-ftp-site-serverType option:selected', $dialog).text();
+        var serverType =  $('#ftp-site-serverType option:selected', $dialog).text();
         if (serverType === 'Windows'){
             hideChmodOption();
         }
@@ -200,15 +200,15 @@ define(function (require, exports) {
 			updateChmodOption();
 		});
 
-        $('#osftp-ftp-site-serverType', $dialog).change(function(){
+        $('#ftp-site-serverType', $dialog).change(function(){
             updateServerType();
         });
 
 		$("input[type='checkbox']", $dialog).change(function(){
-			$("#osftp-ftp-site-chmodNumericValue", $dialog).val(getChmodModeString());
+			$("#ftp-site-chmodNumericValue", $dialog).val(getChmodModeString());
 		});
 
-		$("#osftp-ftp-site-chmodNumericValue", $dialog).change(function(){
+		$("#ftp-site-chmodNumericValue", $dialog).change(function(){
 			setChmodMode($(this).val());
 		});
 
@@ -249,28 +249,28 @@ define(function (require, exports) {
 	function setChmodMode(inputStr){
 		if (isFilePermission(inputStr)){
 
-			$("#osftp-ftp-site-chmodNumericValueStatus", $dialog).text("");
+			$("#ftp-site-chmodNumericValueStatus", $dialog).text("");
 
 			var arr = inputStr.split('');
 
-			$("#osftp-ftp-site-chmodOwnerRead",    $dialog).prop("checked", (arr[0] & 4) ? true : false);
-			$("#osftp-ftp-site-chmodOwnerWrite",   $dialog).prop("checked", (arr[0] & 2) ? true : false);
-			$("#osftp-ftp-site-chmodOwnerExecute", $dialog).prop("checked", (arr[0] & 1) ? true : false);
+			$("#ftp-site-chmodOwnerRead",    $dialog).prop("checked", (arr[0] & 4) ? true : false);
+			$("#ftp-site-chmodOwnerWrite",   $dialog).prop("checked", (arr[0] & 2) ? true : false);
+			$("#ftp-site-chmodOwnerExecute", $dialog).prop("checked", (arr[0] & 1) ? true : false);
 
-			$("#osftp-ftp-site-chmodGroupRead",    $dialog).prop("checked", (arr[1] & 4) ? true : false);
-			$("#osftp-ftp-site-chmodGroupWrite",   $dialog).prop("checked", (arr[1] & 2) ? true : false);
-			$("#osftp-ftp-site-chmodGroupExecute", $dialog).prop("checked", (arr[1] & 1) ? true : false);
+			$("#ftp-site-chmodGroupRead",    $dialog).prop("checked", (arr[1] & 4) ? true : false);
+			$("#ftp-site-chmodGroupWrite",   $dialog).prop("checked", (arr[1] & 2) ? true : false);
+			$("#ftp-site-chmodGroupExecute", $dialog).prop("checked", (arr[1] & 1) ? true : false);
 
-			$("#osftp-ftp-site-chmodPublicRead",    $dialog).prop("checked", (arr[2] & 4) ? true : false);
-			$("#osftp-ftp-site-chmodPublicWrite",   $dialog).prop("checked", (arr[2] & 2) ? true : false);
-			$("#osftp-ftp-site-chmodPublicExecute", $dialog).prop("checked", (arr[2] & 1) ? true : false);
+			$("#ftp-site-chmodPublicRead",    $dialog).prop("checked", (arr[2] & 4) ? true : false);
+			$("#ftp-site-chmodPublicWrite",   $dialog).prop("checked", (arr[2] & 2) ? true : false);
+			$("#ftp-site-chmodPublicExecute", $dialog).prop("checked", (arr[2] & 1) ? true : false);
 
-			$("#osftp-ftp-site-chmodNumericValue", $dialog).val(getChmodModeString());
+			$("#ftp-site-chmodNumericValue", $dialog).val(getChmodModeString());
 
 			return true;
 		} else {
-			$("#osftp-ftp-site-chmodNumericValue", $dialog).val(getChmodModeString());
-			$("#osftp-ftp-site-chmodNumericValueStatus", $dialog).text("Invalid");
+			$("#ftp-site-chmodNumericValue", $dialog).val(getChmodModeString());
+			$("#ftp-site-chmodNumericValueStatus", $dialog).text("Invalid");
 
 			return false;
 		}
@@ -282,19 +282,19 @@ define(function (require, exports) {
 		var publicGroup = 0;
 
 		// get value from owner
-		ownerGroup |= $("#osftp-ftp-site-chmodOwnerRead",    $dialog).prop("checked") ? 4 : 0;
-		ownerGroup |= $("#osftp-ftp-site-chmodOwnerWrite",   $dialog).prop("checked") ? 2 : 0;
-		ownerGroup |= $("#osftp-ftp-site-chmodOwnerExecute", $dialog).prop("checked") ? 1 : 0;
+		ownerGroup |= $("#ftp-site-chmodOwnerRead",    $dialog).prop("checked") ? 4 : 0;
+		ownerGroup |= $("#ftp-site-chmodOwnerWrite",   $dialog).prop("checked") ? 2 : 0;
+		ownerGroup |= $("#ftp-site-chmodOwnerExecute", $dialog).prop("checked") ? 1 : 0;
 
 		// get value from group
-		groupGroup |= $("#osftp-ftp-site-chmodGroupRead",    $dialog).prop("checked") ? 4 : 0;
-		groupGroup |= $("#osftp-ftp-site-chmodGroupWrite",   $dialog).prop("checked") ? 2 : 0;
-		groupGroup |= $("#osftp-ftp-site-chmodGroupExecute", $dialog).prop("checked") ? 1 : 0;
+		groupGroup |= $("#ftp-site-chmodGroupRead",    $dialog).prop("checked") ? 4 : 0;
+		groupGroup |= $("#ftp-site-chmodGroupWrite",   $dialog).prop("checked") ? 2 : 0;
+		groupGroup |= $("#ftp-site-chmodGroupExecute", $dialog).prop("checked") ? 1 : 0;
 
 		// get value from public
-		publicGroup |= $("#osftp-ftp-site-chmodPublicRead",    $dialog).prop("checked") ? 4 : 0;
-		publicGroup |= $("#osftp-ftp-site-chmodPublicWrite",   $dialog).prop("checked") ? 2 : 0;
-		publicGroup |= $("#osftp-ftp-site-chmodPublicExecute", $dialog).prop("checked") ? 1 : 0;
+		publicGroup |= $("#ftp-site-chmodPublicRead",    $dialog).prop("checked") ? 4 : 0;
+		publicGroup |= $("#ftp-site-chmodPublicWrite",   $dialog).prop("checked") ? 2 : 0;
+		publicGroup |= $("#ftp-site-chmodPublicExecute", $dialog).prop("checked") ? 1 : 0;
 
 		return ownerGroup.toString() + groupGroup.toString() + publicGroup.toString();
 	}

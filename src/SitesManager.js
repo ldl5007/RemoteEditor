@@ -6,43 +6,29 @@
 define(function (require, exports) {
 	'use strict';
 
-	/**
-	 * Exetension modules
-	 */
-
-	var osFtpCommon = require('src/common');
-	var osFtpGlobals = require('src/globals');
-	var osFtpHandlersHelpers = require('src/handlersHelpers');
-	var osFtpPreferences = require('src/preferences');
-	var osFtpSite = require('src/site');
-
-	exports.init = init;
-	exports.registerSite = registerSite;
-	exports.removeSite = removeSite;
-	exports.getSitesArray = getSitesArray;
-	exports.getSiteByName = getSiteByName;
-	exports.isSiteExisted = isSiteExisted;
-	exports.newSite = newSite;
-	exports.validateSite = validateSite;
+	var Common      = require("src/Common"),
+		Globals     = require("src/Globals"),
+		Logger      = require("src/Logger"),
+		Preferences = require("src/Preferences"),
+		Site        = require("src/Site");
 
 	var PREF_SITES_MANAGER = '.sites-manager-';
 	var sitesManager;
 
 	function init() {
-
-		console.log('sitesManager.init();');
+		Logger.consoleDebug('sitesManager.init();');
 
 		sitesManager = {};
 
-		var objString = osFtpPreferences.get(PREF_SITES_MANAGER) || [];
+		var objString = Preferences.get(PREF_SITES_MANAGER) || [];
 
 
-		if (osFtpCommon.isSet(objString)) {
+		if (Common.isSet(objString)) {
 			var tempObj = JSON.parse(objString);
 
 			for (var i in tempObj) {
 				if (validateSite(tempObj[i])) {
-					registerSite(osFtpSite.revise(tempObj[i]));
+					registerSite(Site.revise(tempObj[i]));
 				}
 			}
 		}
@@ -55,15 +41,13 @@ define(function (require, exports) {
 		if (validateSite(newSite)) {
 			sitesManager[newSite.name] = newSite;
 
-			osFtpHandlersHelpers.addSite(newSite);
-
 			// Update preferences
-			osFtpPreferences.set(PREF_SITES_MANAGER, JSON.stringify(sitesManager));
-			osFtpPreferences.save();
+			Preferences.set(PREF_SITES_MANAGER, JSON.stringify(sitesManager));
+			Preferences.save();
 
 			returnStatus = true;
 
-			console.log('Site registered - ' + newSite.name);
+			Logger.consoleDebug('Site registered - ' + newSite.name);
 
 		}
 
@@ -78,10 +62,8 @@ define(function (require, exports) {
 		if (validateSite(site)) {
 			delete sitesManager[siteName];
 
-			osFtpHandlersHelpers.removeSite(site);
-
-			osFtpPreferences.set(PREF_SITES_MANAGER, JSON.stringify(sitesManager));
-			osFtpPreferences.save();
+			Preferences.set(PREF_SITES_MANAGER, JSON.stringify(sitesManager));
+			Preferences.save();
 		}
 
 		return returnStatus;
@@ -119,7 +101,7 @@ define(function (require, exports) {
 		}
 
 		// Check if the object ID is correct
-		if (inputSite.objId !== osFtpGlobals.OBJECT_FTP_SITE_ID) {
+		if (inputSite.objId !== Globals.OBJECT_ID_FTP_SITE) {
 			return false;
 		}
 
@@ -127,7 +109,16 @@ define(function (require, exports) {
 	}
 
 	function newSite(name, hostAddr, rootDir, userName, password) {
-		return new osFtpSite.Site(name, hostAddr, rootDir, userName, password);
+		return new Site.Site(name, hostAddr, rootDir, userName, password);
 	}
+
+	exports.init = init;
+	exports.registerSite = registerSite;
+	exports.removeSite = removeSite;
+	exports.getSitesArray = getSitesArray;
+	exports.getSiteByName = getSiteByName;
+	exports.isSiteExisted = isSiteExisted;
+	exports.newSite = newSite;
+	exports.validateSite = validateSite;
 
 });

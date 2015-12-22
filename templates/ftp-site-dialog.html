@@ -1,4 +1,4 @@
-<div id="osftp-ftp-site-dialog" class="modal">
+<div id="ftp-site-dialog" class="modal">
 	<div class="modal-header">
 		<h1 class="dialog-title">{{DIALOG_TITLE_ADD_SITE}}</h1>
 	</div>
@@ -7,32 +7,32 @@
 		<div class="row-fluid">
 			<div class="span6">
 				<div class="row-fluid" editOption="false">
-					<label for="osftp-ftp-site-siteName">{{DIALOG_INPUT_NAME}}</label>
-					<input id="osftp-ftp-site-siteName" type="text"/>
+					<label for="ftp-site-siteName">{{DIALOG_INPUT_NAME}}</label>
+					<input id="ftp-site-siteName" type="text"/>
 				</div>
 				<div class="row-fluid">
-					<label for="osftp-ftp-site-hostName">{{DIALOG_INPUT_HOST}}</label>
-					<input id="osftp-ftp-site-hostName" type="text"/>
+					<label for="ftp-site-hostName">{{DIALOG_INPUT_HOST}}</label>
+					<input id="ftp-site-hostName" type="text"/>
 				</div>
 				<div class="row-fluid">
-					<label for="osftp-ftp-site-rootDir">{{DIALOG_INPUT_ROOT}}</label>
-					<input id="osftp-ftp-site-rootDir" type="text"/>
+					<label for="ftp-site-rootDir">{{DIALOG_INPUT_ROOT}}</label>
+					<input id="ftp-site-rootDir" type="text"/>
 				</div>
 				<div class="row-fluid">
-					<label for="osftp-ftp-site-userName">{{DIALOG_INPUT_USER}}</label>
-					<input id="osftp-ftp-site-userName" type="text"/>
+					<label for="ftp-site-userName">{{DIALOG_INPUT_USER}}</label>
+					<input id="ftp-site-userName" type="text"/>
 				</div>
 				<div class="row-fluid">
-					<label for="osftp-ftp-site-password">{{DIALOG_INPUT_PASSWORD}}</label>
-					<input id="osftp-ftp-site-password" type="password"/>
+					<label for="ftp-site-password">{{DIALOG_INPUT_PASSWORD}}</label>
+					<input id="ftp-site-password" type="password"/>
 				</div>
 			</div>
 			<div class="span6">
-				<div id="osftp-ftp-select-serverType" class="row-fluid">
-					<label  class="span4" for="osftp-ftp-site-serverType">{{DIALOG_SERVER_TYPE}}</label>
-					<select class="span8"  id="osftp-ftp-site-serverType"></select>
+				<div id="ftp-select-serverType" class="row-fluid">
+					<label  class="span4" for="ftp-site-serverType">{{DIALOG_SERVER_TYPE}}</label>
+					<select class="span8"  id="ftp-site-serverType"></select>
 				</div>
-				<div id="osftp-ftp-input-chmod-option" class="row-fluid">
+				<div id="ftp-input-chmod-option" class="row-fluid">
 					<label for="toggle-chmod-option">
 						<input id="toggle-chmod-option" type="checkbox"/>
 						{{DIALOG_TOGGLE_CHMOD}}
@@ -43,20 +43,20 @@
 				</div>
 				<div class="row-fluid" chmodOption>
 					<div class="span4">
-						<label for="osftp-ftp-site-chmodOwnerRead">
-							<input  id="osftp-ftp-site-chmodOwnerRead" type="checkbox">
+						<label for="ftp-site-chmodOwnerRead">
+							<input  id="ftp-site-chmodOwnerRead" type="checkbox">
 							{{CHECKBOX_READ}}
 						</label>
 					</div>
 					<div class="span4">
-						<label for="osftp-ftp-site-chmodOwnerWrite">
-							<input  id="osftp-ftp-site-chmodOwnerWrite" type="checkbox">
+						<label for="ftp-site-chmodOwnerWrite">
+							<input  id="ftp-site-chmodOwnerWrite" type="checkbox">
 							{{CHECKBOX_WRITE}}
 						</label>
 					</div>
 					<div class="span4">
-						<label for="osftp-ftp-site-chmodOwnerExecute">
-							<input  id="osftp-ftp-site-chmodOwnerExecute" type="checkbox">
+						<label for="ftp-site-chmodOwnerExecute">
+							<input  id="ftp-site-chmodOwnerExecute" type="checkbox">
 							{{CHECKBOX_EXECUTE}}
 						</label>
 					</div>
@@ -66,20 +66,20 @@
 				</div>
 				<div class="row-fluid" chmodOption>
 					<div class="span4">
-						<label for="osftp-ftp-site-chmodGroupRead">
-							<input  id="osftp-ftp-site-chmodGroupRead" type="checkbox">
+						<label for="ftp-site-chmodGroupRead">
+							<input  id="ftp-site-chmodGroupRead" type="checkbox">
 							{{CHECKBOX_READ}}
 						</label>
 					</div>
 					<div class="span4">
-						<label for="osftp-ftp-site-chmodGroupWrite">
-							<input  id="osftp-ftp-site-chmodGroupWrite" type="checkbox">
+						<label for="ftp-site-chmodGroupWrite">
+							<input  id="ftp-site-chmodGroupWrite" type="checkbox">
 							{{CHECKBOX_WRITE}}
 						</label>
 					</div>
 					<div class="span4">
-						<label for="osftp-ftp-site-chmodGroupExecute">
-							<input  id="osftp-ftp-site-chmodGroupExecute" type="checkbox">
+						<label for="ftp-site-chmodGroupExecute">
+							<input  id="ftp-site-chmodGroupExecute" type="checkbox">
 							{{CHECKBOX_EXECUTE}}
 						</label>
 					</div>
@@ -89,30 +89,30 @@
 				</div>
 				<div class="row-fluid" chmodOption>
 					<div class="span4">
-						<label for="osftp-ftp-site-chmodPublicRead">
-							<input  id="osftp-ftp-site-chmodPublicRead" type="checkbox">
+						<label for="ftp-site-chmodPublicRead">
+							<input  id="ftp-site-chmodPublicRead" type="checkbox">
 							{{CHECKBOX_READ}}
 						</label>
 					</div>
 					<div class="span4">
-						<label for="osftp-ftp-site-chmodPublicWrite">
-							<input  id="osftp-ftp-site-chmodPublicWrite" type="checkbox">
+						<label for="ftp-site-chmodPublicWrite">
+							<input  id="ftp-site-chmodPublicWrite" type="checkbox">
 							{{CHECKBOX_WRITE}}
 						</label>
 					</div>
 					<div class="span4">
-						<label for="osftp-ftp-site-chmodPublicExecute">
-							<input  id="osftp-ftp-site-chmodPublicExecute" type="checkbox">
+						<label for="ftp-site-chmodPublicExecute">
+							<input  id="ftp-site-chmodPublicExecute" type="checkbox">
 							{{CHECKBOX_EXECUTE}}
 						</label>
 					</div>
 				</div>
 				<div class="row-fluid" chmodOption>
 					<div class="span8">
-						<label class="span8" for="osftp-ftp-site-chmodNumericValue">{{DIALOG_CHMOD_NUMERIC_VALUE}}</label>
-						<input class="span4" id="osftp-ftp-site-chmodNumericValue" type="text"/>
+						<label class="span8" for="ftp-site-chmodNumericValue">{{DIALOG_CHMOD_NUMERIC_VALUE}}</label>
+						<input class="span4" id="ftp-site-chmodNumericValue" type="text"/>
 					</div>
-					<div class="span4" id="osftp-ftp-site-chmodNumericValueStatus" style="color:red"></div>
+					<div class="span4" id="ftp-site-chmodNumericValueStatus" style="color:red"></div>
 				</div>
 			</div>
 		</div>
@@ -121,7 +121,7 @@
 	<div class="modal-footer">
 		<div class="row-fluid">
 			<div class="span6">
-				<div id="osftp-ftp-site-inputErrorMessage" style="color:red"></div>
+				<div id="ftp-site-inputErrorMessage" style="color:red"></div>
 			</div>
 			<div class="span6">
 				<button data-button-id="remove" class="dialog-button btn" editOption="true">{{BUTTON_REMOVE}}</button>

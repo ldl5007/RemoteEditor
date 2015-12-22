@@ -5,14 +5,12 @@
 define(function (require, exports) {
 	'use strict';
 
-	var osFtpGlobals = require('src/globals');
-	var osFtpStrings = require('strings');
-
-	exports.Site = Site;
-	exports.revise = revise;
+	var Globals = require("src/Globals"),
+		Logger  = require("src/Logger"),
+		Strings = require("strings");
 
 	function Site(name, hostAddr, rootDir, userName, password) {
-		this.objId = osFtpGlobals.OBJECT_FTP_SITE_ID;
+		this.objId = Globals.OBJECT_ID_FTP_SITE;
 		this.name = name;
 		this.hostAddr = hostAddr;
 		this.rootDir = rootDir;
@@ -59,22 +57,22 @@ define(function (require, exports) {
     };
 
 	Site.prototype.getCommandId = function () {
-		return osFtpGlobals.COMMAND_RUN_SITE_BASE_ID + this.name;
+		return Globals.COMMAND_RUN_SITE_BASE_ID + this.name;
 	};
 
 	Site.prototype.getCommandLabel = function () {
-		return osFtpStrings.COMMAND_RUN_SITE_BASE_LABEL + this.name;
+		return Strings.COMMAND_RUN_SITE_BASE_LABEL + this.name;
 	};
 
 	Site.prototype.debugPrint = function () {
-		console.log("objId: " + this.objId);
-		console.log("name:  " + this.name);
-		console.log("hostAddr: " + this.hostAddr);
-		console.log("rootDir:  " + this.rootDir);
-		console.log("userName: " + this.userName);
-		console.log("password: " + '**********');
-		console.log("chmodStr: " + this.chmodStr);
-        console.log("remoteOs: " + this.remoteOs);
+		Logger.consoleDebug("objId: " + this.objId);
+		Logger.consoleDebug("name:  " + this.name);
+		Logger.consoleDebug("hostAddr: " + this.hostAddr);
+		Logger.consoleDebug("rootDir:  " + this.rootDir);
+		Logger.consoleDebug("userName: " + this.userName);
+		Logger.consoleDebug("password: " + '**********');
+		Logger.consoleDebug("chmodStr: " + this.chmodStr);
+        Logger.consoleDebug("remoteOs: " + this.remoteOs);
 	};
 
 	function revise(object) {
@@ -89,10 +87,13 @@ define(function (require, exports) {
 		if (object.hasOwnProperty('remoteOs')){
 			newSite.setRemoteOs(object.remoteOs);
 		} else {
-			newSite.setRemoteOs(osFtpGlobals.DEFAULT_REMOTE_OS);
+			newSite.setRemoteOs(Globals.DEFAULT_REMOTE_OS);
 		}
 
 		return newSite;
 	}
+
+	exports.Site = Site;
+	exports.revise = revise;
 
 });

@@ -1,14 +1,10 @@
 define (function (require, exports){
 	"use strict";
 
-	var FileUtils = brackets.getModule('file/FileUtils');
-	var osFtpCommon = require('src/common');
-	var osFtpGlobals = require('src/globals');
-
-	exports.newFileTree = newFileTree;
-	exports.debugPrint  = debugPrint;
-	exports.generateHtmlTreeContainer = generateHtmlTreeContainer;
-	exports.generateHtmlTreeNode      = generateHtmlTreeNode;
+	var FileUtils = brackets.getModule("file/FileUtils"),
+		Common    = require("src/Common"),
+		Globals   = require("src/Globals"),
+		Logger    = require("src/Logger");
 
 	var nodeId = 0;
 
@@ -30,7 +26,7 @@ define (function (require, exports){
 		if (this.getChildDirIndexByName(dirName) === -1){
 			var newNode = new TreeNode(dirName);
 			newNode.parent = this;
-			newNode.type   = osFtpGlobals.TREE_TYPE_DIR;
+			newNode.type   = Globals.TREE_TYPE_DIR;
 			newNode.level  = this.level + 1;
 
 			newNode.relativePath = relativePath;
@@ -39,7 +35,7 @@ define (function (require, exports){
 			this.childDirs.push(newNode);
 			registerTreeNode(newNode);
 
-			console.log(newNode);
+			Logger.consoleDebug(newNode);
 		}
 	};
 
@@ -51,7 +47,7 @@ define (function (require, exports){
 		if (this.getChildFileIndexByName(fileName) === -1){
 			var newNode = new TreeNode(fileName);
 			newNode.parent = this;
-			newNode.type   = osFtpGlobals.TREE_TYPE_FILE;
+			newNode.type   = Globals.TREE_TYPE_FILE;
 			newNode.level  = this.level + 1;
 
 			newNode.relativePath = relativePath;
@@ -60,7 +56,7 @@ define (function (require, exports){
 			this.childFiles.push(newNode);
 			registerTreeNode(newNode);
 
-			console.log(newNode);
+			Logger.consoleDebug(newNode);
 		}
 	};
 
@@ -69,7 +65,7 @@ define (function (require, exports){
 	 **/
 
 	TreeNode.prototype.addRelativePath = function(filePath, isSelected){
-		console.log('TreeNode.addRelativePath(' + filePath + ')');
+		Logger.consoleDebug('TreeNode.addRelativePath(' + filePath + ')');
 		if (typeof filePath !== 'string'){
 			return false;
 		}
@@ -81,7 +77,7 @@ define (function (require, exports){
 		var currPath = '';
 		var nodeName = '';
 
-		console.log(listDir);
+		Logger.consoleDebug(listDir);
 
 		// Loop through and build the tree
 		for (var i = 0; i < listDir.length - 1; i++){
@@ -107,7 +103,7 @@ define (function (require, exports){
 	TreeNode.prototype.getRootNode = function(){
 		var currNode = this;
 
-		while(currNode.type !== osFtpGlobals.TREE_TYPE_ROOT){
+		while(currNode.type !== Globals.TREE_TYPE_ROOT){
 			currNode = currNode.parent;
 		}
 
@@ -170,7 +166,7 @@ define (function (require, exports){
 	 *
 	 **/
 	TreeNode.prototype.getChildren = function(){
-		console.log('TreeNode.getChildren()');
+		Logger.consoleDebug('TreeNode.getChildren()');
 		var children = [];
 
 		for (var dir = 0; dir < this.childDirs.length; dir++){
@@ -215,7 +211,7 @@ define (function (require, exports){
 		var retCount = 0;
 
 		for (var index in listNode){
-			if (listNode[index].type === osFtpGlobals.TREE_TYPE_FILE){
+			if (listNode[index].type === Globals.TREE_TYPE_FILE){
 				retCount++;
 			}
 		}
@@ -231,7 +227,7 @@ define (function (require, exports){
 		var retCount = 0;
 
 		for (var index in listNode){
-			if (listNode[index].type === osFtpGlobals.TREE_TYPE_FILE && listNode[index].isSelected){
+			if (listNode[index].type === Globals.TREE_TYPE_FILE && listNode[index].isSelected){
 				retCount++;
 			}
 		}
@@ -245,8 +241,8 @@ define (function (require, exports){
 
 	function newFileTree(rootDir){
 		var newTree = new TreeNode();
-		newTree.objType = osFtpGlobals.OBJECT_DIR_TREE_ID;
-		newTree.type = osFtpGlobals.TREE_TYPE_ROOT;
+		newTree.objType = Globals.OBJECT_DIR_TREE_ID;
+		newTree.type = Globals.TREE_TYPE_ROOT;
 		newTree.rootDir = rootDir;
 
 		newTree.nodeInventory = [];
@@ -261,7 +257,7 @@ define (function (require, exports){
 	 **/
 
 	function generateHtmlTreeContainer(treeNode, treeDiv){
-		console.log("generateHtmlTreeContainer()");
+		Logger.consoleDebug("generateHtmlTreeContainer()");
 		var tableId = treeDiv + '-tree';
 
 		var html = '<table id="' + tableId + '" class="table table-striped table-bordered">';
@@ -277,7 +273,7 @@ define (function (require, exports){
 	 **/
 
 	function generateHtmlTreeNode(treeNode){
-		console.log('generateHtmlTreeNode()');
+		Logger.consoleDebug('generateHtmlTreeNode()');
 
 		var nodeId, currNode;
 		var html = '';
@@ -339,21 +335,21 @@ define (function (require, exports){
 	 **/
 
 	function debugPrint(TreeNode){
-		if (osFtpCommon.isSet(TreeNode)){
-			console.log('id:     ' + TreeNode.id);
-			console.log('type:   ' + TreeNode.type);
-			console.log('level:  ' + TreeNode.level);
-			console.log('name:   ' + TreeNode.name);
-			console.log('parent: ' + TreeNode.parent);
-			console.log('relativePath: ' + TreeNode.relativePath);
-			console.log('isSelected: ' + TreeNode.isSelected);
+		if (Common.isSet(TreeNode)){
+			Logger.consoleDebug('id:     ' + TreeNode.id);
+			Logger.consoleDebug('type:   ' + TreeNode.type);
+			Logger.consoleDebug('level:  ' + TreeNode.level);
+			Logger.consoleDebug('name:   ' + TreeNode.name);
+			Logger.consoleDebug('parent: ' + TreeNode.parent);
+			Logger.consoleDebug('relativePath: ' + TreeNode.relativePath);
+			Logger.consoleDebug('isSelected: ' + TreeNode.isSelected);
 
 			for (var child = 0; child < TreeNode.childFiles; child++){
-				console.log('childFile ' + child + ': ' + TreeNode.childFiles[child]);
+				Logger.consoleDebug('childFile ' + child + ': ' + TreeNode.childFiles[child]);
 			}
 
 			for (var childDir = 0; childDir < TreeNode.childDirs.length; childDir++){
-				console.log('childDir ' + childDir + ': ' + TreeNode.childDirs[childDir]);
+				Logger.consoleDebug('childDir ' + childDir + ': ' + TreeNode.childDirs[childDir]);
 				debugPrint(TreeNode.childDirs[childDir]);
 			}
 		}
@@ -361,7 +357,7 @@ define (function (require, exports){
 
 	function registerTreeNode(node){
 		var rootNode = node.getRootNode();
-		console.log(rootNode);
+		Logger.consoleDebug(rootNode);
 		rootNode.nodeInventory[node.id] = node;
 	}
 
@@ -372,5 +368,9 @@ define (function (require, exports){
 		return returnId;
 	}
 
+	exports.newFileTree               = newFileTree;
+	exports.debugPrint                = debugPrint;
+	exports.generateHtmlTreeContainer = generateHtmlTreeContainer;
+	exports.generateHtmlTreeNode      = generateHtmlTreeNode;
 
 });
