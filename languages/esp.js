@@ -10,17 +10,52 @@ define(function (require, exports) {
 	//Load the required module
 	var CodeMirror = brackets.getModule('thirdparty/CodeMirror/lib/codemirror');
 
+	//@TODO DOCUMENT
+	/**
+	 * Generate an array of keywords 
+	 * @param {string} string A space separated list of keywords
+	 * @returns {array}  An array that represents the string passed
+	 */
 	function keywords(string) {
 		return string.split(' ');
+	}
+			
+	/**
+	 * This function will generate a keyword object based on
+	 * multiple keyword arrays.
+	 * @param {array}    styles The styles for the specific keywords
+	 * @param {...array} array  One or more arrays to combine. The styles
+	 *                          array must have a length equal to the number
+	 *                          of elements passed
+	 * @returns {object}   An object that represents all of the arrays passed
+	 */
+	function addKeywords(styles, array) {
+		var object = {};
+		
+		//Loop through each array passed
+		for(var arg = 1; arg < arguments.length; arg++){
+			//Get the array from the arguments
+			var array = arguments[arg];
+			
+			//Loop through each element in the array
+			for (var i = 0; i < array.length; i++) {
+				object[array[i]] = styles[arg - 1];
+			}
+		}
+
+		return object;
 	}
 
 	//Define keywords as arrays
 	var wordOperators = keywords("and not noshare on or share to");
-	var controlOperators = keywords("assign call do else end exit gosub procedure otherwise retsub return select then when while");
+	var controlOperators = keywords("assign call do else end exit gosub if procedure otherwise retsub return select then when while");
 	var builtins = keywords("a2e abs appc args b2c bitand bitor bitxor c2b c2d c2fp c2x control copies cos d2c d2x date delay e2a " +
 		"forever fp2c fp2x insert int intcmd intread iterate leave left log log10 lower max min noyes nparse " +
 		"null0 parse pause pos random remstr resume right seccall selstr sin socket space sqrt substr translate " +
 		"typechk upper vartable word wordlength wordpos words write wto x2c x2d x2fp zfeature");
+	
+	//Generate the keywords object
+	var espKeywords = addKeywords(["keyword", "keyword", "builtin"], wordOperators, controlOperators, builtins);;
 
 	//Register code helpers
 	CodeMirror.registerHelper("hintWords", "esp", controlOperators.concat(builtins));
@@ -32,11 +67,12 @@ define(function (require, exports) {
 	//This is the entire definition for the esp language. After defining it here, we are
 	//able to add it through the LanguageManager in brackets
 	CodeMirror.defineMode("esp", function (config, parserConfig) {
-
-
+		var wordRE = parserConfig.wordCharacters || /[\w$\xa1-\uffff]/;
+		var number = /[0-9]/;
+		
 		function tokenBase(stream, state) {
 			var char = stream.next();
-
+			
 			/******************************************/
 			/********* CHECK FOR STRING ***************/
 			/******************************************/
@@ -44,29 +80,67 @@ define(function (require, exports) {
 				state.tokenize = tokenString(char);
 				return state.tokenize(stream, state);
 			}
+			/*else if(char == '&'){
+				stream.eatWhile(/[^/S{}()]/);	
+			}*/
+			/******************************************/
+			/********* CHECK FOR NUMBERS **************/
+			/******************************************/
+			else if(char == '.'){
+				console.log(state.lastState);
+				
+				//Handle variables with . in them
+				if(state.lastState == "variable"){
+					stream.eatWhile(number);
+					
+					return "property";
+				} else {
+					//Eat all of the numbers
+					if(stream.eat(number)){
+						stream.eatWhile(number);
+						return "number";
+					}
+				}
+			} else if(number.test(char)){
+				stream.eatWhile(number);
+				if(stream.eat('.')){
+					stream.eatWhile(number);
+				}
+				return "number";
+			}
 			/******************************************/
 			/********* CHECK FOR BLOCK COMMENT ********/
 			/******************************************/
-			else if(char == "/"){
-				if(stream.eat('*')){
+			else if (char == "/") {
+				if (stream.eat('*')) {
 					state.tokenize = tokenBlockComment;
 					return state.tokenize(stream, state);
 				}
-				
+
 				return "operator";
-			} 
+			}
 			/******************************************/
 			/********* CHECK FOR LINE COMMENT *********/
 			/******************************************/
-			else if(char == '-'){
-				if(stream.eat('*')){
+			else if (char == '-') {
+				if (stream.eat('*')) {
 					stream.skipToEnd();
 					return "comment";
 				}
-				
+
 				return "operator"
 			}
+			/******************************************/
+			/********* CHECK FOR KEYWORDS *************/
+			/******************************************/
+			else if (wordRE.test(char)) {
+				stream.eatWhile(wordRE);
+				var word = stream.current().toLowerCase(), known = espKeywords.propertyIsEnumerable(word) && espKeywords[word];				
+				return (known && state.lastType != ".") ? known : "variable";
+			}
 		}
+		//Operators	
+		//                 + - * / ** // % = \= < > <= >= == \== << >> <<= >>=
 
 		/**
 		 * This function will generate a function to parse through a
@@ -99,32 +173,39 @@ define(function (require, exports) {
 				return "string";
 			}
 		}
-		
+
 		/**
 		 * This function will tokenize a block comment
 		 * @param   {object} stream The current stream
 		 * @param   {object} state  The current state
 		 * @returns {string} The style to report back to the caller
 		 */
-		function tokenBlockComment(stream, state){
+		function tokenBlockComment(stream, state) {
 			//Init variables
-			var foundStar = false, char;
-			
-			while(char = stream.next()){
+			var foundStar = false,
+				char;
+
+			while (char = stream.next()) {
 				//Conditions that need to be matched to
 				//exit the comment
-				if(foundStar && char == "/"){
+				if (foundStar && char == "/") {
 					state.tokenize = tokenBase;
 					break;
 				}
-				
+
 				foundStar = (char == "*");
 			}
-			
+
 			return "comment";
 		}
-		
-		
+
+
+		/*
+		function tokenKeywords(stream, state){
+			
+		}*/
+
+
 
 		function tokenLexer(stream, state) {
 			var style = state.tokenize(stream, state);
@@ -137,7 +218,7 @@ define(function (require, exports) {
 			// Handle scope changes.
 			/*if (current == "pass" || current == "return")
 				state.dedent += 1;*/
-			
+
 			/*
 
 			if (current == "lambda") state.lambda = true;
@@ -173,7 +254,7 @@ define(function (require, exports) {
 						align: null
 					}],
 					lastToken: null,
-					lambda: false,
+					lastState: null,
 					dedent: 0
 				};
 			},
@@ -181,17 +262,29 @@ define(function (require, exports) {
 			token: function (stream, state) {
 				var addErr = state.errorToken;
 				if (addErr) state.errorToken = false;
-				var style = tokenLexer(stream, state);
-
-				if (style && style != "comment")
-					state.lastToken = (style == "keyword" || style == "punctuation") ? stream.current() : style;
 				
-				if (style == "punctuation") style = null;
+				var style = tokenLexer(stream, state);
+				var token = stream.current();
+				
+				if(token){
+					state.lastToken = token;
+				}
+				
+				if(style){
+					state.lastState = style;
+				}
+				
+				/*
+				state.lastToken 
+				if (style && style != "comment")
+					state.lastToken = (style == "keyword") ? stream.current() : style;
+
+				if (style == "punctuation") style = null;*/
 
 				/*if (stream.eol() && state.lambda)
 					state.lambda = false;*/
 				//return addErr ? style  : style;
-				
+
 				return style;
 			},
 
@@ -207,7 +300,7 @@ define(function (require, exports) {
 					return state.scopes[state.scopes.length - 2].offset;
 				else
 					return scope.offset;*/
-				
+
 				return 0;
 			},
 
