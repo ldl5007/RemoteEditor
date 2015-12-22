@@ -96,7 +96,7 @@ define(function (require, exports) {
 			console.log(html);
 
 			// If the after Row does not exist or not matched
-			if ($("#"+ tableId + "-" + afterRow, $reEdPanel).length == 0){
+			if ($("#"+ tableId + "-" + afterRow, $reEdPanel).length === 0){
 				$("#"+ tableId, $reEdPanel).append(html);
 			}
 			else {
@@ -113,7 +113,7 @@ define(function (require, exports) {
 	}
 
 	function checkAll() {
-		var status = $(this).is(":checked");
+		var status = $('.check-all').is(":checked");
 
 		$('.file-row', $reEdPanel).each(function() {
 			$(this).find("input:checkbox").prop('checked', status);
