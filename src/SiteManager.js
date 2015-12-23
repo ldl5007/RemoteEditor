@@ -16,7 +16,7 @@ define(function (require, exports) {
 	var sitesManager;
 
 	function init() {
-		Logger.consoleDebug('sitesManager.init();');
+		Logger.consoleDebug('SiteManager.init();');
 
 		sitesManager = {};
 

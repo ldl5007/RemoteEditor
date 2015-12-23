@@ -3,7 +3,7 @@ define(function (require, exports) {
 
 	var Dialogs      = brackets.getModule("widgets/Dialogs");
 	var Strings      = require("../strings");
-	var SitesManager = require("./sitesManager");
+	var SiteManager = require("./SiteManager");
 	var osftpCommon  = require("./common");
 
 	var ftpSiteDialogTemplate = require("text!templates/ftp-site-dialog.html");
@@ -19,8 +19,8 @@ define(function (require, exports) {
 
 	function okButtonHandle(){
 		var site = collectValues();
-		SitesManager.registerSite(site);
-		console.log(SitesManager.getSitesArray());
+		SiteManager.registerSite(site);
+		console.log(Sitemanager.getSitesArray());
 	}
 
 	function cancelButtonHandle(){
@@ -28,7 +28,7 @@ define(function (require, exports) {
 
 	function removeButtonHandle(){
 		var site = collectValues();
-		SitesManager.removeSite(site.name);
+		Sitemanager.removeSite(site.name);
 	}
 
 	function init(inputSite){
@@ -46,7 +46,7 @@ define(function (require, exports) {
 		}
 
 		// If input is a site then fill in the fields with info
-		if (SitesManager.validateSite(inputSite)){
+		if (Sitemanager.validateSite(inputSite)){
 
 			$("#ftp-site-siteName", $dialog).val(inputSite.name);
 			$("#ftp-site-hostName", $dialog).val(inputSite.hostAddr);
@@ -93,7 +93,7 @@ define(function (require, exports) {
 
 	function collectValues(){
 		// If all is pass then collect data
-		var site = SitesManager.newSite($("#ftp-site-siteName", $dialog).val().replace(/\s+/g, '-'),
+		var site = Sitemanager.newSite($("#ftp-site-siteName", $dialog).val().replace(/\s+/g, '-'),
 										$("#ftp-site-hostName", $dialog).val(),
 										$("#ftp-site-rootDir",  $dialog).val(),
 										$("#ftp-site-userName", $dialog).val(),
@@ -129,7 +129,7 @@ define(function (require, exports) {
 				return false;
 			}
 
-			if (SitesManager.isSiteExisted(siteName)){
+			if (Sitemanager.isSiteExisted(siteName)){
 				setErrorMessage(Strings.DIALOG_ERROR_SITE_EXISTS);
 				return false;
 			}
