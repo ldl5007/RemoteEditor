@@ -28,7 +28,7 @@ define (function (require, exports) {
 	}
 
 	function reviseFile(object){
-		var newFileInfo = new FileInfo(object.localPath, object.remotePath, object.remoteServer);
+		var newFileInfo = new File.FileInfo(object.localPath, object.remotePath, object.remoteServer);
 
 		return newFileInfo;
 	}

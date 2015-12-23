@@ -14,7 +14,8 @@ define(function (require, exports) {
 		FileManager  = require("src/FileManager"),
 		Main         = require("src/Main"),
 		Logger       = require("src/Logger"),
-		Strings      = require("strings");
+		Strings      = require("strings"),
+		SiteManagerDialog = require("src/SiteManagerDialog");
 
 	var reEdPanelTemplate = require("text!templates/remote-editor-panel.html");
 
@@ -60,7 +61,7 @@ define(function (require, exports) {
 
 
 		initFileTable();
-		toggle(true);
+		toggle(false);
 	}
 
 
@@ -88,6 +89,7 @@ define(function (require, exports) {
 
 			html += '<tr class="file-row" id="' + rowId + '">';
 			html += '<td class="col-1"><input type="checkbox" /></td>';
+			html += '<td class="col-updated"></td>';
 			html += '<td class="col-2">' + fileInfo.getLocalPath()    +'</td>';
 			html += '<td class="col-3">' + fileInfo.getRemotePath()   +'</td>';
 			html += '<td class="col-4">' + fileInfo.getRemoteServer() +'</td>';
@@ -145,6 +147,8 @@ define(function (require, exports) {
 		newFile = new FileInfo.FileInfo("insert", "insert", "insert");
 
 		insertNewRow(newFile);
+
+		SiteManagerDialog.show();
 	});
 
 	EventEmitter.on(Events.PANEL_REMOVE_FILE, function() {

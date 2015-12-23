@@ -21,7 +21,7 @@ define(function (require, exports) {
 
 	FileInfo.prototype.getId = function() {
 		return this.id;
-	}
+	};
 
 	FileInfo.prototype.getLocalPath = function() {
 		return this.localPath;
@@ -33,7 +33,7 @@ define(function (require, exports) {
 
 	FileInfo.prototype.getRemoteServer = function() {
 		return this.remoteServer;
-	}
+	};
 
 	FileInfo.prototype.debugPrint = function() {
 		Logger.consoleDebug("objId: " + this.objId);

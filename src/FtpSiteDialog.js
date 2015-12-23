@@ -6,7 +6,7 @@ define(function (require, exports) {
 	var SitesManager = require("./sitesManager");
 	var osftpCommon  = require("./common");
 
-	var ftpSiteDialogTemplat = require("text!templates/ftp-site-dialog.html");
+	var ftpSiteDialogTemplate = require("text!templates/ftp-site-dialog.html");
 
 	exports.show = show;
 
@@ -300,7 +300,7 @@ define(function (require, exports) {
 	}
 
 	function show(inputSite){
-		var compiledTemplate = Mustache.render(ftpSiteDialogTemplat, Strings);
+		var compiledTemplate = Mustache.render(ftpSiteDialogTemplate, Strings);
 
 		dialog = Dialogs.showModalDialogUsingTemplate(compiledTemplate);
 		$dialog = dialog.getElement();

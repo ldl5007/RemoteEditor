@@ -35,6 +35,7 @@ define({
 
 	DIALOG_TITLE_LIST_SELECTION: "List Selection Dialog",
 	DIALOG_TITLE_ADD_SITE:       "Add FTP Site",
+	DIALOG_TITLE_SITE_MANAGER:   "Site Manager Dialog",
 	DIALOG_CHMOD_NUMERIC_VALUE:  "Numeric Value",
 	DIALOG_CHMOD_GROUP_PUBLIC:   "Public permissions",
 	DIALOG_CHMOD_GROUP_GROUP:    "Group permissions",
@@ -45,14 +46,18 @@ define({
 	DIALOG_INPUT_ROOT: "Root:",
 	DIALOG_INPUT_USER: "User:",
 	DIALOG_INPUT_PASSWORD: "Password:",
+	DIALOG_SITE_TABLE: "Sites:",
 
 	DIALOG_SERVER_TYPE: "Server Type:",
 	DIALOG_TOGGLE_CHMOD: "Set Permission",
 
-	BUTTON_CANCEL:  "cancel",
-	BUTTON_REMOVE:  "remove",
-	BUTTON_SAVE:    "save",
-	BUTTON_OK:      "ok",
+	BUTTON_CANCEL:  "Cancel",
+	BUTTON_CONNECT: "Connect",
+	BUTTON_REMOVE:  "Remove",
+	BUTTON_SAVE:    "Save",
+	BUTTON_OK:      "OK",
+	BUTTON_NEW_SITE: "New Site",
+	BUTTON_EDIT_SITE: "Edit Site",
 
 	CHECKBOX_READ: "Read",
 	CHECKBOX_WRITE: "Write",
