@@ -3,8 +3,8 @@ define(function (require, exports) {
 
 	var AppInit = brackets.getModule("utils/AppInit");
 
-	var Panel  = require("src/Panel"),
-		Logger = require("src/Logger");
+	var Panel       = require("src/Panel"),
+		Logger      = require("src/Logger");
 
 	var $icon = $("<a id='remote-editor-icon' href='#'></a>")
 					.attr("title", String.LOADING)

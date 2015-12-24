@@ -4,7 +4,8 @@ define(function (require, exports) {
 	var Dialogs      = brackets.getModule("widgets/Dialogs");
 	var Strings      = require("../strings");
 	var SiteManager = require("./SiteManager");
-	var osftpCommon  = require("./common");
+	var Common      = require("./Common");
+	var Logger      = require("./Logger");
 
 	var ftpSiteDialogTemplate = require("text!templates/ftp-site-dialog.html");
 
@@ -20,7 +21,7 @@ define(function (require, exports) {
 	function okButtonHandle(){
 		var site = collectValues();
 		SiteManager.registerSite(site);
-		console.log(Sitemanager.getSitesArray());
+		Logger.consoleDebug(SiteManager.getSitesArray());
 	}
 
 	function cancelButtonHandle(){
@@ -28,7 +29,7 @@ define(function (require, exports) {
 
 	function removeButtonHandle(){
 		var site = collectValues();
-		Sitemanager.removeSite(site.name);
+		SiteManager.removeSite(site.name);
 	}
 
 	function init(inputSite){
@@ -46,7 +47,7 @@ define(function (require, exports) {
 		}
 
 		// If input is a site then fill in the fields with info
-		if (Sitemanager.validateSite(inputSite)){
+		if (SiteManager.validateSite(inputSite)){
 
 			$("#ftp-site-siteName", $dialog).val(inputSite.name);
 			$("#ftp-site-hostName", $dialog).val(inputSite.hostAddr);
@@ -54,7 +55,7 @@ define(function (require, exports) {
 			$("#ftp-site-userName", $dialog).val(inputSite.userName);
 			$("#ftp-site-password", $dialog).val(inputSite.password);
 
-			if (osftpCommon.isSet(inputSite.getChmodStr())){
+			if (Common.isSet(inputSite.getChmodStr())){
 				setChmodMode(inputSite.chmodStr);
 				$('#toggle-chmod-option', $dialog).prop("checked",true);
 			}
@@ -93,7 +94,7 @@ define(function (require, exports) {
 
 	function collectValues(){
 		// If all is pass then collect data
-		var site = Sitemanager.newSite($("#ftp-site-siteName", $dialog).val().replace(/\s+/g, '-'),
+		var site = SiteManager.newSite($("#ftp-site-siteName", $dialog).val().replace(/\s+/g, '-'),
 										$("#ftp-site-hostName", $dialog).val(),
 										$("#ftp-site-rootDir",  $dialog).val(),
 										$("#ftp-site-userName", $dialog).val(),
@@ -124,19 +125,19 @@ define(function (require, exports) {
 		//var password = $("#ftp-site-password", $dialog).val();
 
 		if (!isEditMode){
-			if (!osftpCommon.isSet(siteName)){
+			if (!Common.isSet(siteName)){
 				setErrorMessage(Strings.DIALOG_ERROR_SITE_INVALID);
 				return false;
 			}
 
-			if (Sitemanager.isSiteExisted(siteName)){
+			if (SiteManager.isSiteExisted(siteName)){
 				setErrorMessage(Strings.DIALOG_ERROR_SITE_EXISTS);
 				return false;
 			}
 		}
 
 		// Validate host name
-		if (!osftpCommon.isSet(hostName)){
+		if (!Common.isSet(hostName)){
 			setErrorMessage(Strings.DIALOG_ERROR_HOST_INVALID);
 			return false;
 		}
@@ -184,7 +185,7 @@ define(function (require, exports) {
 	}
 
     function updateServerType(){
-        console.log('serverType changed');
+        Logger.consoleDebug('serverType changed');
         var serverType =  $('#ftp-site-serverType option:selected', $dialog).text();
         if (serverType === 'Windows'){
             hideChmodOption();
@@ -300,6 +301,7 @@ define(function (require, exports) {
 	}
 
 	function show(inputSite){
+		Logger.consoleDebug("FtpSiteDialog.Show(" + JSON.stringify(inputSite) + ")");
 		var compiledTemplate = Mustache.render(ftpSiteDialogTemplate, Strings);
 
 		dialog = Dialogs.showModalDialogUsingTemplate(compiledTemplate);
@@ -316,5 +318,7 @@ define(function (require, exports) {
 				removeButtonHandle();
 			}
 		});
+
+		return dialog;
 	}
 });

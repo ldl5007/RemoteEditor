@@ -49,6 +49,7 @@ define({
 	DIALOG_SITE_TABLE: "Sites:",
 
 	DIALOG_SERVER_TYPE: "Server Type:",
+	DIALOG_EMPTY_LIST:  "Empty",
 	DIALOG_TOGGLE_CHMOD: "Set Permission",
 
 	BUTTON_CANCEL:  "Cancel",

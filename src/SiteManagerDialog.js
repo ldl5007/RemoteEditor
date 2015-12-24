@@ -3,25 +3,50 @@ define (function (require, exports){
 
 	var Dialogs      = brackets.getModule("widgets/Dialogs"),
 		Strings      = require("../strings"),
-		Events       = require("./Events"),
-		EventEmitter = require("./EventEmitter"),
 		Logger       = require("./Logger"),
+		SiteManager  = require("./SiteManager"),
 		FtpSiteDialog = require("./FtpSiteDialog");
 
 	var DialogTemplate = require("text!templates/site-manager-dialog.html");
 
 	var dialog,
-		$dialog;
+		$dialog,
+		selectedSite = null;
 
 	function init(){
+		Logger.consoleDebug("SiteManager.init()");
+		SiteManager.init();
 		refresh();
 
-		$('button[data-button-id="new-site"]', $dialog).on("click", newSite);
-		$('button[data-button-id="edit-site"]', $dialog).on("click", editSite);
+		$('button[data-button-id="new-site"]', $dialog).on("click", newSiteHandle);
+		$('button[data-button-id="edit-site"]', $dialog).on("click", editSiteHandle);
 	}
 
 	function refresh(){
 		Logger.consoleDebug("SiteManagerDialog.refresh()");
+
+		var html = '';
+		var siteList = SiteManager.getSitesArray();
+		selectedSite = null;
+
+		if (siteList.length === 0){
+			html += '<tr class="site-row">';
+			html += '<td>' + Strings.DIALOG_EMPTY_LIST + '</tr>';
+			html += '</tr>';
+		} else {
+			for (var index = 0; index < siteList.length; index++) {
+				var site = siteList[index];
+
+				if (SiteManager.validateSite(site)){
+					html += '<tr class="site-row">';
+					html += '<td>' + site.getName() + '</tr>';
+					html += '</tr>';
+				}
+			}
+		}
+
+		$("#ftp-site-table", $dialog).html(html);
+		$(".site-row", $dialog).on("click", selectedSiteHandle);
 	}
 
 	function show(){
@@ -34,18 +59,36 @@ define (function (require, exports){
 		init();
 	}
 
-	function newSite(e){
-		Logger.consoleDebug("SiteManagerDialog.newSite()");
+	function newSiteHandle(e){
+		Logger.consoleDebug("SiteManagerDialog.newSiteHandle()");
 		e.stopPropagation();
 
-		FtpSiteDialog.show();
-
+		var dialog = FtpSiteDialog.show();
+		dialog.done(refresh);
 	}
 
-	function editSite(e){
-		Logger.consoleDebug("SiteManagerDialog.editSite()");
-
+	function editSiteHandle(e){
+		Logger.consoleDebug("SiteManagerDialog.editSiteHandle()");
 		e.stopPropagation();
+
+		if (SiteManager.validateSite(selectedSite)){
+			var dialog = FtpSiteDialog.show(selectedSite);
+			dialog.done(refresh);
+		}
+	}
+
+	function selectedSiteHandle(){
+		Logger.consoleDebug("SiteManagerDialog.selectedSiteHandle()");
+
+		var siteName = $(this).text();
+		console.log($(this).text());
+
+		selectedSite = SiteManager.getSiteByName(siteName);
+
+		$("#ftp-serverType",    $dialog).val(selectedSite.getRemoteOs());
+		$("#ftp-site-hostName", $dialog).val(selectedSite.getHostAddr());
+		$("#ftp-site-rootDir",  $dialog).val(selectedSite.getRootDir());
+		$("#ftp-site-userName", $dialog).val(selectedSite.getUserName());
 	}
 
 	exports.show = show;
