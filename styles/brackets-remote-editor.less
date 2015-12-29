@@ -30,42 +30,53 @@
     }
 }
 
-#file-table {
-	table {
-		border-collapse: collapse;
-	}
-	th {
-		text-align: center;
-	}
-	td, th {
-		height: 15px;
-		padding: 3px;
-	}
-	.col-1 {
-		width: 5%;
-		text-align: center;
-	}
-	.col-2 {
-		text-align: left;
-	}
-	.col-3 {
-		text-align: left;
-	}
-	.col-4 {
-		text-align: left;
+#remote-ditor-panel {
+	#file-table {
+		table {
+			border-collapse: collapse;
+		}
+		tr.selected {
+			font-weight: 400;
+		}
+
+		td, th {
+			height: 15px;
+			padding: 3px;
+		}
+		.col-1 {
+			width: 5%;
+			text-align: center;
+		}
+		.col-2 {
+			text-align: left;
+		}
+		.col-3 {
+			text-align: left;
+		}
+		.col-4 {
+			text-align: left;
+		}
 	}
 }
+
+
 
 #site-manager-dialog {
 	table {
 		border-collapse: collapse;
 	}
+	tr.selected {
+    	font-weight: 400;
+	}
 	td {
 		height: 15px;
 		padding: 3px;
 	}
+
 	.footer {
 		position: absolute;
 		bottom: 0px;
 	}
 }
+
+

@@ -47,6 +47,10 @@ define (function (require, exports){
 
 		$("#ftp-site-table", $dialog).html(html);
 		$(".site-row", $dialog).on("click", selectedSiteHandle);
+
+		$("tr", $dialog).click(function(){
+    		$(this).addClass("selected").siblings().removeClass("selected");
+		});
 	}
 
 	function show(){
