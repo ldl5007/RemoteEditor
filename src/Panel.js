@@ -62,6 +62,13 @@ define(function (require, exports) {
 
 		initFileTable();
 		toggle(false);
+
+		FileManager.init();
+		var fileArray = FileManager.getFileArray();
+		for (var index in fileArray){
+			insertNewRow(fileArray[index]);
+		}
+
 	}
 
 
@@ -146,6 +153,7 @@ define(function (require, exports) {
 
 		newFile = new FileInfo.FileInfo("insert", "insert", "insert");
 
+		FileManager.registerFile(newFile);
 		insertNewRow(newFile);
 
 		SiteManagerDialog.show();
@@ -157,6 +165,7 @@ define(function (require, exports) {
 		var selFiles = getSelectedFiles();
 
 		for (var index = 0; index < selFiles.length; index++){
+			FileManager.removeFile(selFiles[index]);
 			deleteRow(selFiles[index]);
 		}
 
