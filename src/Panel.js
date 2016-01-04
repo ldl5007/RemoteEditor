@@ -173,7 +173,6 @@ define(function (require, exports) {
 		$(".check-all", $reEdPanel).prop("checked", false);
 	});
 
-
 	exports.deleteRow    = deleteRow;
 	exports.insertNewRow = insertNewRow;
 	exports.toggle = toggle;

@@ -5,6 +5,7 @@ define (function (require, exports){
 		Strings      = require("../strings"),
 		Logger       = require("./Logger"),
 		SiteManager  = require("./SiteManager"),
+		Domain       = require("./Domain"),
 		FtpSiteDialog = require("./FtpSiteDialog");
 
 	var DialogTemplate = require("text!templates/site-manager-dialog.html");
@@ -20,6 +21,8 @@ define (function (require, exports){
 
 		$('button[data-button-id="new-site"]', $dialog).on("click", newSiteHandle);
 		$('button[data-button-id="edit-site"]', $dialog).on("click", editSiteHandle);
+		$('button[data-button-id="connect"]', $dialog).on("click", connectHandle);
+
 	}
 
 	function refresh(){
@@ -81,6 +84,13 @@ define (function (require, exports){
 		}
 	}
 
+	function connectHandle(e){
+		Logger.consoleDebug("SiteManagerDialog.connectHandle()");
+		e.stopPropagation();
+
+		Domain.debug();
+	}
+
 	function selectedSiteHandle(){
 		Logger.consoleDebug("SiteManagerDialog.selectedSiteHandle()");
 
@@ -94,6 +104,7 @@ define (function (require, exports){
 		$("#ftp-site-rootDir",  $dialog).val(selectedSite.getRootDir());
 		$("#ftp-site-userName", $dialog).val(selectedSite.getUserName());
 	}
+
 
 	exports.show = show;
 });

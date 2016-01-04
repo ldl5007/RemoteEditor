@@ -27,12 +27,11 @@ maxerr: 50, node: true */
 (function () {
     'use strict';
 
-
     /**
      * Global variables
      */
     var globalDomainManager;
-    var osFtpDomainName = 'osFtp';
+    var osFtpDomainName = 'reEd.ftp.domain';
     var osFtpDomainMessage = osFtpDomainName + '-' + 'msg';
     var osFtpDomainData = osFtpDomainName + '-' + 'data';
 
