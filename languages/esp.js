@@ -221,8 +221,7 @@ define(function (require, exports) {
 
 		//This pushes an indent line
 		function pushScope(stream, state, type) {
-			var offset = 0,
-				align = null;
+			var offset = 0;
 
 			//Clear out hanging indentes
 			if (type == "esp") {
@@ -233,14 +232,10 @@ define(function (require, exports) {
 			//Adjust the offset
 			offset = top(state).offset + (type == "esp" ? conf.indentUnit : hangingIndent);
 
-			if (type != "esp")
-				align = stream.column() + 1;
-
 			//Push the scope
 			state.scopes.push({
 				offset: offset,
-				type: type,
-				align: align
+				type: type
 			});
 		}
 		
@@ -260,8 +255,23 @@ define(function (require, exports) {
 			var style = state.tokenize(stream, state);
 			var current = stream.current().toLowerCase();
 			
+			
+			//Pop out of the continued statement
+			if(top(state).type == "comma" && stream.eol()){
+				popScope(state);		
+			}
+			
+			//Check if there was possibly a continuation comma
+			if(state.maybeComma && (style == "comment" || current.trim().length == 0)){
+				if(stream.eol()){
+					pushScope(stream, state, "comma");
+				}
+			} else { 
+				state.maybeComma = false;
+			}
+			
 			//Pop out of the then clause scope
-			if(top(state).type == "then" && stream.eol()){
+			if(top(state).type == "then" && stream.eol() && current != ","){
 				popScope(state);
 			}
 			
@@ -277,8 +287,11 @@ define(function (require, exports) {
 				}
 			} 
 			else if (current == ",") {
-				console.log("found comma");
-				console.log(stream.eol());
+				state.maybeComma = true;
+				
+				if(stream.eol()){
+					pushScope(stream, state, "comma")
+				}
 			} 
 			//Check to see if current is equal to "end" and then
 			//attempt to popScope. If popScope fails then there
@@ -298,11 +311,15 @@ define(function (require, exports) {
 					tokenize: tokenBase,
 					scopes: [{
 						offset: basecolumn || 0,
-						type: "esp",
-						align: null
+						type: "esp"
 					}],
 					lastToken: null,
-					lastState: null
+					lastState: null,
+					
+					/**
+					 *	Keep track of possible ending commas
+					 */
+					maybeComma: false
 				};
 			},
 
@@ -331,9 +348,7 @@ define(function (require, exports) {
 				var scope = top(state);
 				var closing = ((textAfter && textAfter == "end") || state.lastToken == "end");
 
-				if (scope.align != null)
-					return scope.align;
-				else if (closing && state.scopes.length > 1)
+				if (closing && state.scopes.length > 1)
 					return state.scopes[state.scopes.length - 2].offset;
 				else
 					return scope.offset;
