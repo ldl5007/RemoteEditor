@@ -35,6 +35,7 @@ define(function (require, exports) {
 	}
 
 	function registerSite(newSite) {
+		Logger.consoleDebug("SiteManager.registerSite()");
 
 		var returnStatus = false;
 
@@ -56,6 +57,7 @@ define(function (require, exports) {
 
 
 	function removeSite(siteName) {
+		Logger.consoleDebug("SiteManager.removeSite(" + siteName + ")");
 		var returnStatus = false;
 
 		var site = getSiteByName(siteName);

@@ -95,6 +95,7 @@ define (function (require, exports){
 		Logger.consoleDebug("SiteManagerDialog.selectedSiteHandle()");
 
 		var siteName = $(this).text();
+
 		console.log($(this).text());
 
 		selectedSite = SiteManager.getSiteByName(siteName);
@@ -104,7 +105,6 @@ define (function (require, exports){
 		$("#ftp-site-rootDir",  $dialog).val(selectedSite.getRootDir());
 		$("#ftp-site-userName", $dialog).val(selectedSite.getUserName());
 	}
-
 
 	exports.show = show;
 });
