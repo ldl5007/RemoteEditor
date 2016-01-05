@@ -9,60 +9,64 @@ define(function (require, exports) {
 
 	//Load the required module
 	var CodeMirror = brackets.getModule('thirdparty/CodeMirror/lib/codemirror');
+	var CodeHintManager = brackets.getModule('editor/CodeHintManager');
+	var ESPProvider = require('languages/providers/esp');
+	
+	/**
+	 * Generate an array of keywords 
+	 * @param {string} string A space separated list of keywords
+	 * @returns {array}  An array that represents the string passed
+	 */
+	function keywords(string) {
+		return string.split(' ');
+	}
+
+	/**
+	 * This function will generate a keyword object based on
+	 * multiple keyword arrays.
+	 * @param {array}    styles The styles for the specific keywords
+	 * @param {...array} array  One or more arrays to combine. The styles
+	 *                          array must have a length equal to the number
+	 *                          of elements passed
+	 * @returns {object}   An object that represents all of the arrays passed
+	 */
+	function addKeywords(styles, array) {
+		var object = {};
+
+		//Loop through each array passed
+		for (var arg = 1; arg < arguments.length; arg++) {
+			//Get the array from the arguments
+			var array = arguments[arg];
+
+			//Loop through each element in the array
+			for (var i = 0; i < array.length; i++) {
+				object[array[i]] = styles[arg - 1];
+			}
+		}
+
+		return object;
+	}
+
+	//Define keywords as arrays
+	var wordOperators = keywords("and not noshare on or share to");
+	var controlOperators = keywords("assign call do else end exit gosub if procedure otherwise retsub return select then when while");
+	var builtins = keywords("a2e abs appc args b2c bitand bitor bitxor c2b c2d c2fp c2x control copies cos d2c d2x date delay delword e2a escapestr" +
+		"forever format fp2c fp2x insert int intcmd intread iterate leave left length log log10 lower max min noyes nparse " +
+		"null0 parse pause pos random remstr resume right seccall selstr sin socket space sqrt substr translate " +
+		"typechk upper vartable vconcat word wordlength wordpos words write wto x2c x2d x2fp zfeature");
+
+	//Generate the keywords object
+	var espKeywords = addKeywords(["keyword", "keyword", "builtin"], wordOperators, controlOperators, builtins);;
+
+	//Register code helpers
+	CodeMirror.registerHelper("hintWords", "esp", controlOperators.concat(builtins));	
+	CodeMirror.hintWords.esp.sort();
+	
+	CodeHintManager.registerHintProvider(new ESPProvider.Provider(), ["esp"]);
 
 	//This is the entire definition for the esp language. After defining it here, we are
 	//able to add it through the LanguageManager in brackets
 	CodeMirror.defineMode("esp", function (conf, parserConf) {
-		//@TODO DOCUMENT
-		/**
-		 * Generate an array of keywords 
-		 * @param {string} string A space separated list of keywords
-		 * @returns {array}  An array that represents the string passed
-		 */
-		function keywords(string) {
-			return string.split(' ');
-		}
-		
-		/**
-		 * This function will generate a keyword object based on
-		 * multiple keyword arrays.
-		 * @param {array}    styles The styles for the specific keywords
-		 * @param {...array} array  One or more arrays to combine. The styles
-		 *                          array must have a length equal to the number
-		 *                          of elements passed
-		 * @returns {object}   An object that represents all of the arrays passed
-		 */
-		function addKeywords(styles, array) {
-			var object = {};
-
-			//Loop through each array passed
-			for (var arg = 1; arg < arguments.length; arg++) {
-				//Get the array from the arguments
-				var array = arguments[arg];
-
-				//Loop through each element in the array
-				for (var i = 0; i < array.length; i++) {
-					object[array[i]] = styles[arg - 1];
-				}
-			}
-
-			return object;
-		}
-
-		//Define keywords as arrays
-		var wordOperators = keywords("and not noshare on or share to");
-		var controlOperators = keywords("assign call do else end exit gosub if procedure otherwise retsub return select then when while");
-		var builtins = keywords("a2e abs appc args b2c bitand bitor bitxor c2b c2d c2fp c2x control copies cos d2c d2x date delay delword e2a escapestr" +
-			"forever format fp2c fp2x insert int intcmd intread iterate leave left length log log10 lower max min noyes nparse " +
-			"null0 parse pause pos random remstr resume right seccall selstr sin socket space sqrt substr translate " +
-			"typechk upper vartable vconcat word wordlength wordpos words write wto x2c x2d x2fp zfeature");
-
-		//Generate the keywords object
-		var espKeywords = addKeywords(["keyword", "keyword", "builtin"], wordOperators, controlOperators, builtins);;
-
-		//Register code helpers
-		CodeMirror.registerHelper("hintWords", "esp", controlOperators.concat(builtins));
-
 		function top(state) {
 			return state.scopes[state.scopes.length - 1];
 		}

@@ -3,7 +3,7 @@ define(function (require, exports) {
 	var LanguageManager = brackets.getModule("language/LanguageManager");
 
 	//Load our custom language modes
-	var esp = require("languages/esp");
+	var esp = require("languages/syntax/esp");
 
 	//Define ESP
 	LanguageManager.defineLanguage("esp", {
@@ -13,4 +13,6 @@ define(function (require, exports) {
 		blockComment: ["/*", "*/"],
 		lineComment: ["-*"]
 	});
+	
+	
 });
