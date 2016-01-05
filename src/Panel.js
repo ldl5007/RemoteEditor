@@ -75,7 +75,7 @@ define(function (require, exports) {
 	function initFileTable() {
 		Logger.consoleDebug("Panel.initFileTable()");
 
-		var html  = '<table id="' + tableId + '" class="table table-striped">';
+		var html  = '<table id="' + tableId + '" class="table table-striped table-condensed row-highlight">';
 			html += '</table>';
 
 		rowPrefix = tableId + "-row-";

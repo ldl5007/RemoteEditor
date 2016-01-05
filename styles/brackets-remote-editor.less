@@ -61,15 +61,22 @@
 	}
 }
 
-
-
 #site-manager-dialog {
 	table {
 		border-collapse: collapse;
 	}
 	tr.selected {
     	font-weight: 400;
-	}
+
+		td {
+			background-color: @bc-panel-bg-selected;
+
+			.dark & {
+				background: @dark-bc-panel-bg-selected;
+			}
+		}
+    }
+
 	td {
 		height: 15px;
 		padding: 3px;

@@ -22,7 +22,6 @@ define (function (require, exports){
 		$('button[data-button-id="new-site"]', $dialog).on("click", newSiteHandle);
 		$('button[data-button-id="edit-site"]', $dialog).on("click", editSiteHandle);
 		$('button[data-button-id="connect"]', $dialog).on("click", connectHandle);
-
 	}
 
 	function refresh(){
@@ -49,10 +48,19 @@ define (function (require, exports){
 		}
 
 		$("#ftp-site-table", $dialog).html(html);
-		$(".site-row", $dialog).on("click", selectedSiteHandle);
+		$(".site-row", $dialog).on("click", function(){
+			var siteName = $(this).text();
 
-		$("tr", $dialog).click(function(){
-    		$(this).addClass("selected").siblings().removeClass("selected");
+			console.log($(this).text());
+
+			selectedSite = SiteManager.getSiteByName(siteName);
+
+			$("#ftp-serverType",    $dialog).val(selectedSite.getRemoteOs());
+			$("#ftp-site-hostName", $dialog).val(selectedSite.getHostAddr());
+			$("#ftp-site-rootDir",  $dialog).val(selectedSite.getRootDir());
+			$("#ftp-site-userName", $dialog).val(selectedSite.getUserName());
+
+			$(this).addClass("selected").siblings().removeClass("selected");
 		});
 	}
 
@@ -88,22 +96,9 @@ define (function (require, exports){
 		Logger.consoleDebug("SiteManagerDialog.connectHandle()");
 		e.stopPropagation();
 
+		console.log(selectedSite);
+
 		Domain.debug();
-	}
-
-	function selectedSiteHandle(){
-		Logger.consoleDebug("SiteManagerDialog.selectedSiteHandle()");
-
-		var siteName = $(this).text();
-
-		console.log($(this).text());
-
-		selectedSite = SiteManager.getSiteByName(siteName);
-
-		$("#ftp-serverType",    $dialog).val(selectedSite.getRemoteOs());
-		$("#ftp-site-hostName", $dialog).val(selectedSite.getHostAddr());
-		$("#ftp-site-rootDir",  $dialog).val(selectedSite.getRootDir());
-		$("#ftp-site-userName", $dialog).val(selectedSite.getUserName());
 	}
 
 	exports.show = show;
