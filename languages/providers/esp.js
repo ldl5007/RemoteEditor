@@ -8,47 +8,56 @@ define(function (require, exports) {
 
 	function Provider() {
 		this.hints = CodeMirror.hintWords.esp;
+		this.prevHint = [];
 		this.search = "";
-		this.startNewHint = true;
+		this.isStartingNewHint = true;
 
-		this.hasHints = function (editor, implicitChar) {
-			console.log('hasHints: ' + implicitChar);
-			
-			//Prevent hinting from starting on a new line or space
-			//wait for the first character to start hinting
-			if (implicitChar == "" || implicitChar == " ") {
-				this.search = "";
-				this.startNewHint = true;
-				return false;
-			} 
-			//Only start hinting if we are ready,
-			//keeps us from displaying hints for a word as soon
-			//as we run out of hints once
-			else {
-				return true;
-			}
+		this.hasHints = function (editor, implicitChar) {			
+			return !this.startNewHint(implicitChar);
 		}
 
 
 		this.getHints = function (implicitChar) {
-			this.startNewHint = false;
+			//Hoist variables	
+			var newHintArray = [], 
+				selectInitial = true;
 			
+			this.isStartingNewHint = false;
+			
+			//Modify the search string
 			if (implicitChar == null) {
 				this.search = this.search.substr(0, this.search.length - 1);
 			} else {
 				this.search += implicitChar.toLowerCase();
 			}
 			
-			console.log('getHints: ' + implicitChar);
+			//Check if the length is 0 if so
+			//then exit hinting on this run through
+			if (this.search.length == 0) {
+				this.startNewHint();
+				newHintArray = [];
+			} else {
+				newHintArray = this.getHintArray();
+				
+				//Only adjust the hint array when the length of the array
+				//returned is >= 1. This prevents us from exiting the hinting
+				//function when an invalid input is entered.
+				if(newHintArray.length >= 1){
+					this.prevHint = newHintArray;
+				} 
+				//Disable selecting the initial result as no matches were found
+				else {
+					selectInitial = false;
+				}
+			}
 			
+			console.log(newHintArray);
 
-			var newHintArray = this.getHintArray();
-			
-			
+			//Return the requested object
 			return {
-				hints: newHintArray,
+				hints: this.prevHint,
 				search: this.search,
-				selectInitial: true,
+				selectInitial: selectInitial,
 				handleWideResults: true
 			}
 		}
@@ -56,7 +65,6 @@ define(function (require, exports) {
 		this.insertHint = function (hint) {
 			console.log(hint);
 		}
-
 
 
 		this.getHintArray = function () {
@@ -71,9 +79,27 @@ define(function (require, exports) {
 
 			return retArray;
 		}
-
-		function getMatchPercentage() {
-
+		
+		//Starts a new word when called without parameters
+		//when called with a parameter then it depends
+		this.startNewHint = function(implicitChar){
+			var shouldStartNewHint = true;
+			
+			if(typeof implicitChar !== 'undefined'){
+				shouldStartNewHint = implicitChar == '\r' ||
+				implicitChar == '' ||
+				implicitChar == ' ' ||
+				implicitChar == '\f' ||
+				implicitChar == '\n';
+			}
+			
+			if(shouldStartNewHint){
+				this.search = "";
+				this.isStartingNewHint = true;
+				this.prevHint = [];
+			}
+			
+			return shouldStartNewHint;
 		}
 	}
 

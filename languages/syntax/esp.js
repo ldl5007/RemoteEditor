@@ -50,7 +50,7 @@ define(function (require, exports) {
 	//Define keywords as arrays
 	var wordOperators = keywords("and not noshare on or share to");
 	var controlOperators = keywords("assign call do else end exit gosub if procedure otherwise retsub return select then when while");
-	var builtins = keywords("a2e abs appc args b2c bitand bitor bitxor c2b c2d c2fp c2x control copies cos d2c d2x date delay delword e2a escapestr" +
+	var builtins = keywords("a2e abs appc args b2c bitand bitor bitxor c2b c2d c2fp c2x control copies cos d2c d2x date delay delword e2a escapestr " +
 		"forever format fp2c fp2x insert int intcmd intread iterate leave left length log log10 lower max min noyes nparse " +
 		"null0 parse pause pos random remstr resume right seccall selstr sin socket space sqrt substr translate " +
 		"typechk upper vartable vconcat word wordlength wordpos words write wto x2c x2d x2fp zfeature");
