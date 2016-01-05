@@ -21,6 +21,7 @@ define(function (require, exports) {
 		}
 
 		this.getHints = function (implicitChar) {
+			console.log(implicitChar);
 			//Hoist variables	
 			var newHintArray = [],
 				selectInitial = true;
@@ -46,6 +47,10 @@ define(function (require, exports) {
 				//returned is >= 1. This prevents us from exiting the hinting
 				//function when an invalid input is entered.
 				if (newHintArray.length >= 1) {
+					if(newHintArray.length == 1 && newHintArray[0] == this.search){
+						newHintArray = [];
+					}
+					
 					this.prevHint = newHintArray;
 				}
 				//Disable selecting the initial result as no matches were found
@@ -67,7 +72,7 @@ define(function (require, exports) {
 			var position = this.editor.getCursorPos();
 			var start = {line: position.line, ch: position.ch - this.search.length}
 			
-			this.editor.document.replaceRange(hint, start, position);
+			this.editor.document.replaceRange(hint + ' ', start, position);
 
 			return false;
 		}
