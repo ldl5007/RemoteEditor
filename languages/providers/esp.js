@@ -11,47 +11,48 @@ define(function (require, exports) {
 		this.prevHint = [];
 		this.search = "";
 		this.isStartingNewHint = true;
+		this.editor = {};
+		this.insertHintOnTab = true;
 
-		this.hasHints = function (editor, implicitChar) {			
+		this.hasHints = function (editor, implicitChar) {
+			this.editor = editor;
+	
 			return !this.startNewHint(implicitChar);
 		}
 
-
 		this.getHints = function (implicitChar) {
 			//Hoist variables	
-			var newHintArray = [], 
+			var newHintArray = [],
 				selectInitial = true;
-			
+
 			this.isStartingNewHint = false;
-			
+
 			//Modify the search string
 			if (implicitChar == null) {
 				this.search = this.search.substr(0, this.search.length - 1);
 			} else {
 				this.search += implicitChar.toLowerCase();
 			}
-			
+
 			//Check if the length is 0 if so
 			//then exit hinting on this run through
-			if (this.search.length == 0) {
+			if (this.search.length == 0 || this.isWordBreak(implicitChar)) {
 				this.startNewHint();
 				newHintArray = [];
 			} else {
 				newHintArray = this.getHintArray();
-				
+
 				//Only adjust the hint array when the length of the array
 				//returned is >= 1. This prevents us from exiting the hinting
 				//function when an invalid input is entered.
-				if(newHintArray.length >= 1){
+				if (newHintArray.length >= 1) {
 					this.prevHint = newHintArray;
-				} 
+				}
 				//Disable selecting the initial result as no matches were found
 				else {
 					selectInitial = false;
 				}
 			}
-			
-			console.log(newHintArray);
 
 			//Return the requested object
 			return {
@@ -63,9 +64,13 @@ define(function (require, exports) {
 		}
 
 		this.insertHint = function (hint) {
-			console.log(hint);
-		}
+			var position = this.editor.getCursorPos();
+			var start = {line: position.line, ch: position.ch - this.search.length}
+			
+			this.editor.document.replaceRange(hint, start, position);
 
+			return false;
+		}
 
 		this.getHintArray = function () {
 			var retArray = [];
@@ -79,27 +84,31 @@ define(function (require, exports) {
 
 			return retArray;
 		}
-		
+
 		//Starts a new word when called without parameters
 		//when called with a parameter then it depends
-		this.startNewHint = function(implicitChar){
+		this.startNewHint = function (implicitChar) {
 			var shouldStartNewHint = true;
-			
-			if(typeof implicitChar !== 'undefined'){
-				shouldStartNewHint = implicitChar == '\r' ||
-				implicitChar == '' ||
-				implicitChar == ' ' ||
-				implicitChar == '\f' ||
-				implicitChar == '\n';
+
+			if (typeof implicitChar !== 'undefined') {
+				shouldStartNewHint = this.isWordBreak(implicitChar);
 			}
-			
-			if(shouldStartNewHint){
+
+			if (shouldStartNewHint) {
 				this.search = "";
 				this.isStartingNewHint = true;
 				this.prevHint = [];
 			}
-			
+
 			return shouldStartNewHint;
+		}
+
+		this.isWordBreak = function (char) {
+			return char == '\r' ||
+				char == '' ||
+				char == ' ' ||
+				char == '\f' ||
+				char == '\n';
 		}
 	}
 
