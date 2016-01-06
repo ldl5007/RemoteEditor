@@ -163,15 +163,15 @@ define(function (require, exports) {
 					//Eat all of the numbers
 					if (stream.eat(number)) {
 						stream.eatWhile(number);
-						
+
 						return "number";
-					} else{
+					} else {
 						return "operator";
 					}
 				}
 			} else if (number.test(char)) {
 				stream.eatWhile(number);
-				
+
 				return "number";
 			}
 			/******************************************/
@@ -181,11 +181,10 @@ define(function (require, exports) {
 				stream.eatWhile(wordRE);
 				var word = stream.current().toLowerCase(),
 					known = espKeywords.propertyIsEnumerable(word) && espKeywords[word];
-				
-				if(known && state.lastToken != "."){
+
+				if (known && state.lastToken != ".") {
 					return known;
-				} 
-				else{
+				} else {
 					return "property";
 				}
 			}
