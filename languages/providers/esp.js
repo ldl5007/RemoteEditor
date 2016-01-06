@@ -1,11 +1,16 @@
 /*
  * Define the esp language code mirror.
  */
-define(function (require, exports) {
+define(function (require, exports, module) {
 	"use strict";
 
 	var CodeMirror = brackets.getModule('thirdparty/CodeMirror/lib/codemirror');
-
+	var ExtensionUtils = brackets.getModule('utils/ExtensionUtils');
+	
+	//Load all stylesheets for the hints
+	ExtensionUtils.loadStyleSheet(module, 'hints.less');
+	
+	
 	function Provider() {
 		this.hints = CodeMirror.hintWords.esp;
 		this.prevHint = [];
