@@ -143,7 +143,7 @@ define(function (require, exports) {
 
 				//Keep track if this is a variable or a stem
 				if (state.lastState == "variable" || state.lastState == "property") {
-					if (/[{(]/.test(state.lastToken)) {
+					if (state.lastToken == '.') {
 						return "property";
 					} else {
 						return "variable";
@@ -156,24 +156,22 @@ define(function (require, exports) {
 			/********* CHECK FOR NUMBERS **************/
 			/******************************************/
 			else if (char == '.') {
-				//@TODO handle switch case
 				//Handle variables with . in them
-				if (state.lastState == "variable" || state.lastState == "property" || state.lastState == "number") {
-					stream.eatWhile(wordRE);
-
-					return "property";
+				if (state.lastState == "variable" || state.lastState == "property") {
+					return "operator";
 				} else {
 					//Eat all of the numbers
 					if (stream.eat(number)) {
 						stream.eatWhile(number);
+						
 						return "number";
+					} else{
+						return "operator";
 					}
 				}
 			} else if (number.test(char)) {
 				stream.eatWhile(number);
-				if (stream.eat('.')) {
-					stream.eatWhile(number);
-				}
+				
 				return "number";
 			}
 			/******************************************/
@@ -183,7 +181,13 @@ define(function (require, exports) {
 				stream.eatWhile(wordRE);
 				var word = stream.current().toLowerCase(),
 					known = espKeywords.propertyIsEnumerable(word) && espKeywords[word];
-				return (known && state.lastType != ".") ? known : "variable";
+				
+				if(known && state.lastToken != "."){
+					return known;
+				} 
+				else{
+					return "property";
+				}
 			}
 		}
 

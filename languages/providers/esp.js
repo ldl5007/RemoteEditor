@@ -20,12 +20,37 @@ define(function (require, exports, module) {
 		this.insertHintOnTab = true;
 
 		this.hasHints = function (editor, implicitChar) {
-			this.editor = editor;
-	
-			return !this.startNewHint(implicitChar);
+			this.editor = editor;			
+			
+			//Check to see if we can start a new hint
+			if(this.isWordBreak(implicitChar)){
+				return false;
+			}else{
+				this.startNewHint();
+				
+				//Get the editor's cursor position and the line
+				var pos = this.editor.getCursorPos();
+				var startPos = pos.ch - 2,
+					endPos = pos.ch - 2;
+				var line = this.editor.document.getLine(pos.line);
+				
+				//Loop until we find a non word character
+				while(line.charAt(startPos - 1).match(/[0-9A-Za-z\#\&\$]/) && startPos > 0){
+					startPos--;
+				}
+				
+				//Adjust the search string
+				this.search = line.substr(startPos, (endPos - startPos) + 1).toLowerCase();
+				
+				if(line.trim() == this.search && this.search == implicitChar){
+					this.search = "";
+				}
+				
+				return true;
+			}
 		}
 
-		this.getHints = function (implicitChar) {
+		this.getHints = function (implicitChar) {			
 			//Hoist variables	
 			var newHintArray = [],
 				selectInitial = true;
@@ -46,7 +71,7 @@ define(function (require, exports, module) {
 				newHintArray = [];
 			} else {
 				newHintArray = this.getHintArray();
-
+				
 				//Only adjust the hint array when the length of the array
 				//returned is >= 1. This prevents us from exiting the hinting
 				//function when an invalid input is entered.
@@ -84,12 +109,61 @@ define(function (require, exports, module) {
 		}
 
 		this.getHintArray = function () {
-			var retArray = [];
+			var retArray = [],
+				maybeExactMatch = false,
+				matchIndex = 0;
 			
+			//Loop through each hint
 			for (var x in this.hints){
-				if (x.search(this.search) != -1){
-					//Push the style of the class
-					retArray.push('<span class="brackets-esp-hints ' + this.hints[x].class + '"><span class="hint-text">' + x + '</span></span>');
+				var position = x.search(this.search);
+				
+				if (position != -1){
+					//Need two code threads to efficently
+					//handle matches
+					if(maybeExactMatch){
+						//If we have already found a match, only add this element if
+						//the search string starts at the beginning of x
+						//thus call and seccall will only match call
+						//while call, call1, and call2 will all match call 
+						if(position == 0){
+							//Push a new element
+							retArray.push(this.generateHintElement(x));
+						}
+					}
+					else{
+						//Check for an exact match
+						if(this.search == x){
+							maybeExactMatch = true;
+						} else{
+							//Otherwise we are still looking for a
+							//match
+							matchIndex++;	
+						}
+						
+						//Push a new element
+						retArray.push(this.generateHintElement(x));
+					}
+				}
+			}
+			
+			//Now we are going to do some smart things here and look
+			//for stuff up to the return index.
+			if(maybeExactMatch){
+				var i = 0;
+				while(i < matchIndex){
+					text = $(retArray[i]).children('.hint-text').eq(0).text();
+					
+					//Check if the current hint starts explicitly with the
+					//search string
+					if(text.search(this.search) == 0){
+						i++;
+					}else{
+						//Remove the current element from the array as it does not
+						//start with the search string. And we have already found an exact match
+						retArray.splice(i,1);
+						matchIndex--;
+					}
+					
 				}
 			}
 				
@@ -97,25 +171,20 @@ define(function (require, exports, module) {
 
 			return retArray;
 		}
+		
+		this.generateHintElement = function(text){
+			return '<span class="brackets-esp-hints ' + this.hints[text].class + '"><span class="hint-text">' + text + '</span></span>';
+		}
+		
 
 		//Starts a new word when called without parameters
 		//when called with a parameter then it depends
-		this.startNewHint = function (implicitChar) {
-			var shouldStartNewHint = true;
-
-			if (typeof implicitChar !== 'undefined') {
-				shouldStartNewHint = this.isWordBreak(implicitChar);
-			}
-
-			if (shouldStartNewHint) {
-				this.search = "";
-				this.isStartingNewHint = true;
-				this.prevHint = [];
-			}
-
-			return shouldStartNewHint;
+		this.startNewHint = function () {
+			this.search = "";
+			this.isStartingNewHint = true;
+			this.prevHint = [];
 		}
-
+		
 		this.isWordBreak = function (char) {
 			return char == '\r' ||
 				char == '' ||
