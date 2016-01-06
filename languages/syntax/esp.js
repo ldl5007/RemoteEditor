@@ -11,7 +11,7 @@ define(function (require, exports) {
 	var CodeMirror = brackets.getModule('thirdparty/CodeMirror/lib/codemirror');
 	var CodeHintManager = brackets.getModule('editor/CodeHintManager');
 	var ESPProvider = require('languages/providers/esp');
-	
+
 	/**
 	 * Generate an array of keywords 
 	 * @param {string} string A space separated list of keywords
@@ -47,6 +47,22 @@ define(function (require, exports) {
 		return object;
 	}
 
+	/**
+	 * Adds a keyword array to the hint object to allow for colored
+	 * results
+	 * 
+	 * @param {object} object    The object to to add the array elements to
+	 * @param {array}  array     The array to parse
+	 * @param {string} htmlClass The class that will be applied in the selection box
+	 */
+	function addHintArray(object, array, htmlClass) {
+		for (var i = 0; i < array.length; i++) {
+			object[array[i]] = {
+				class: htmlClass
+			}
+		}
+	}
+
 	//Define keywords as arrays
 	var wordOperators = keywords("and not noshare on or share to");
 	var controlOperators = keywords("assign call do else end exit gosub if procedure otherwise retsub return select then when while");
@@ -56,12 +72,17 @@ define(function (require, exports) {
 		"typechk upper vartable vconcat word wordlength wordpos words write wto x2c x2d x2fp zfeature");
 
 	//Generate the keywords object
-	var espKeywords = addKeywords(["keyword", "keyword", "builtin"], wordOperators, controlOperators, builtins);;
+	var espKeywords = addKeywords(["keyword", "keyword", "builtin"], wordOperators, controlOperators, builtins);
+	var hints = {};
+
+	addHintArray(hints, controlOperators, "control");
+	addHintArray(hints, builtins, "builtin");
 
 	//Register code helpers
-	CodeMirror.registerHelper("hintWords", "esp", controlOperators.concat(builtins));	
-	CodeMirror.hintWords.esp.sort();
-	
+	CodeMirror.registerHelper("hintWords", "esp", hints);
+
+	//CodeMirror.hintWords.esp.sort();
+
 	CodeHintManager.registerHintProvider(new ESPProvider.Provider(), ["esp"]);
 
 	//This is the entire definition for the esp language. After defining it here, we are
@@ -76,7 +97,7 @@ define(function (require, exports) {
 		var isOperator = /[+\-*\/%=\\<>|]/;
 
 		var hangingIndent = parserConf.hangingIndent || conf.indentUnit;
-		
+
 		//comment
 		function tokenBase(stream, state) {
 			var char = stream.next();
@@ -242,12 +263,12 @@ define(function (require, exports) {
 				type: type
 			});
 		}
-		
+
 		//Pop a scope from the state
 		//returns true if we popped a scope
 		//false if no scope was popped
-		function popScope(state){
-			if(state.scopes.length > 1){
+		function popScope(state) {
+			if (state.scopes.length > 1) {
 				state.scopes.pop();
 				return true;
 			} else {
@@ -258,52 +279,50 @@ define(function (require, exports) {
 		function tokenLexer(stream, state) {
 			var style = state.tokenize(stream, state);
 			var current = stream.current().toLowerCase();
-			
-			
+
+
 			//Pop out of the continued statement
-			if(top(state).type == "comma" && stream.eol()){
-				popScope(state);		
-			}
-			
-			//Check if there was possibly a continuation comma
-			if(state.maybeComma && (style == "comment" || current.trim().length == 0)){
-				if(stream.eol()){
-					pushScope(stream, state, "comma");
-				}
-			} else { 
-				state.maybeComma = false;
-			}
-			
-			//Pop out of the then clause scope
-			if(top(state).type == "then" && stream.eol() && current != ","){
+			if (top(state).type == "comma" && stream.eol()) {
 				popScope(state);
 			}
-			
+
+			//Check if there was possibly a continuation comma
+			if (state.maybeComma && (style == "comment" || current.trim().length == 0)) {
+				if (stream.eol()) {
+					pushScope(stream, state, "comma");
+				}
+			} else {
+				state.maybeComma = false;
+			}
+
+			//Pop out of the then clause scope
+			if (top(state).type == "then" && stream.eol() && current != ",") {
+				popScope(state);
+			}
+
 			//Handle indenting scopes
 			//pushing a scope will increase the indent
 			//popping a scope will decrease the indent			
 			if (current == "do" || current == "procedure") {
 				pushScope(stream, state, "esp");
-			} 
-			else if(current == "then"){
-				if(stream.eol()){
+			} else if (current == "then") {
+				if (stream.eol()) {
 					pushScope(stream, state, "then");
 				}
-			} 
-			else if (current == ",") {
+			} else if (current == ",") {
 				state.maybeComma = true;
-				
-				if(stream.eol()){
+
+				if (stream.eol()) {
 					pushScope(stream, state, "comma")
 				}
-			} 
+			}
 			//Check to see if current is equal to "end" and then
 			//attempt to popScope. If popScope fails then there
 			//is an element in error
-			else if (current == "end" && !popScope(state)){
+			else if (current == "end" && !popScope(state)) {
 				return "error";
 			}
-			
+
 			return style;
 		}
 
@@ -319,7 +338,7 @@ define(function (require, exports) {
 					}],
 					lastToken: null,
 					lastState: null,
-					
+
 					/**
 					 *	Keep track of possible ending commas
 					 */

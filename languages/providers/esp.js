@@ -21,7 +21,6 @@ define(function (require, exports) {
 		}
 
 		this.getHints = function (implicitChar) {
-			console.log(implicitChar);
 			//Hoist variables	
 			var newHintArray = [],
 				selectInitial = true;
@@ -47,7 +46,7 @@ define(function (require, exports) {
 				//returned is >= 1. This prevents us from exiting the hinting
 				//function when an invalid input is entered.
 				if (newHintArray.length >= 1) {
-					if(newHintArray.length == 1 && newHintArray[0] == this.search){
+					if(newHintArray.length == 1 && $(newHintArray[0]).children('.hint-text').eq(0).text() == this.search){
 						newHintArray = [];
 					}
 					
@@ -72,20 +71,24 @@ define(function (require, exports) {
 			var position = this.editor.getCursorPos();
 			var start = {line: position.line, ch: position.ch - this.search.length}
 			
-			this.editor.document.replaceRange(hint + ' ', start, position);
-
+			//Insert the hint by parsing the jQuery object
+			this.editor.document.replaceRange($(hint).children('.hint-text').eq(0).text() + ' ', start, position);
+			this.startNewHint();
+			
 			return false;
 		}
 
 		this.getHintArray = function () {
 			var retArray = [];
-
-			for (var i = 0; i < this.hints.length; i++) {
-				var current = this.hints[i];
-
-				if (current.search(this.search) != -1)
-					retArray.push(current);
+			
+			for (var x in this.hints){
+				if (x.search(this.search) != -1){
+					//Push the style of the class
+					retArray.push('<span class="brackets-esp-hints ' + this.hints[x].class + '"><span class="hint-text">' + x + '</span></span>');
+				}
 			}
+				
+			
 
 			return retArray;
 		}
