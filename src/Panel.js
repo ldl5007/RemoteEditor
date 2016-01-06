@@ -57,7 +57,10 @@ define(function (require, exports) {
 			.on("click", ".close",     toggle)
 			.on("click", ".check-all", checkAll)
 			.on("click", ".add-file",    EventEmitter.emitFactory(Events.PANEL_ADD_FILE))
-			.on("click", ".remove-file", EventEmitter.emitFactory(Events.PANEL_REMOVE_FILE));
+			.on("click", ".remove-file", EventEmitter.emitFactory(Events.PANEL_REMOVE_FILE))
+			.on("click", "tr", function() {
+				$(this).addClass("selected").siblings().removeClass("selected");
+			});
 
 
 		initFileTable();
