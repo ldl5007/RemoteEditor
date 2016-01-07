@@ -20,9 +20,11 @@ define (function (require, exports) {
 
 		fileInventory = {};
 
-		var objString = Preferences.get(PREF_FILE_MANAGER) || [];
+		var objString = Preferences.get(PREF_FILE_MANAGER) || "{}";
 
 		if (Common.isSet(objString)) {
+            console.log(objString);
+
 			var tempObj = JSON.parse(objString);
 
 			for (var i in tempObj) {
