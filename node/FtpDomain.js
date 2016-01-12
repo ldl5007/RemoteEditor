@@ -31,9 +31,10 @@ maxerr: 50, node: true */
      * Global variables
      */
     var globalDomainManager;
-    var osFtpDomainName = 'reEd.ftp.domain';
+    var osFtpDomainName = 'reEdFtpDomain';
     var osFtpDomainMessage = osFtpDomainName + '-' + 'msg';
     var osFtpDomainData = osFtpDomainName + '-' + 'data';
+	var domainResponse =  osFtpDomainName + '-' + 'response';
 
     /**
      * We won't catch all errors but can some of the sever ones.  the only garunteed way to know if there is an error
@@ -54,7 +55,7 @@ maxerr: 50, node: true */
      * @param {Object} domainManager See Brackets documentation on the domainManger object
      */
     function init(domainManager) {
-
+		console.log("FtpDomain.init()");
         //save reference to domain manager
         globalDomainManager = domainManager;
 
@@ -70,6 +71,7 @@ maxerr: 50, node: true */
         /**
          * The last three parameters of each domainManager are documentation for api usage
          */
+		console.log("FtpDomain.registerCommand(doFtp)");
         domainManager.registerCommand(
             osFtpDomainName, // domain name
             'doFtp', // command name
@@ -90,6 +92,7 @@ maxerr: 50, node: true */
         /**
          * The last three parameters of each domainManager are documentation for api usage
          */
+		console.log("FtpDomain.registerCommand(doFtpStdin)");
         domainManager.registerCommand(
             osFtpDomainName,
             'doFtpStdin',
@@ -133,6 +136,15 @@ maxerr: 50, node: true */
 			}]
         );
 
+		domainManager.registerEvent(
+			osFtpDomainName,
+			domainResponse,
+			[{
+				name: 'data',
+				type: 'object',
+				description: 'response data'
+			}]
+		);
     }
 
     /**
@@ -260,8 +272,11 @@ maxerr: 50, node: true */
      */
     function RunProcess(cwd, cmd, args, callBack) {
 
+		var respondObj = {};
+
         //log our spawn
         console.log('runProcess(' + cwd + ', ...);');
+		respondObj.cmd = cmd;
 
         //initialize variables
         var spawn = require('child_process').spawn;
@@ -377,6 +392,11 @@ maxerr: 50, node: true */
                 });
 
             }
+
+			respondObj.stdout = output;
+
+			console.log('emit Event ' + domainRespond);
+			globalDomainManager.emitEvent(osFtpDomainName, domainRespond, respondObj);
 
             //log output
             console.log('stdout: ' + output);

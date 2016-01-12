@@ -1,7 +1,9 @@
 define( function (require, exports, module){
 	"use strict";
 
-	var domainName = 'reEd.ftp.domain';
+	var domainName    = 'reEdFtpDomain',
+		domainResponse = domainName + '-' + 'response';
+	var domainMessage = domainName + '-' + 'msg';
 
 	var ExtensionUtils = brackets.getModule("utils/ExtensionUtils"),
 		NodeDomain     = brackets.getModule("utils/NodeDomain"),
@@ -17,9 +19,10 @@ define( function (require, exports, module){
 		var nodeExec;
 
 		if (!Common.isSet(data)){
-			nodeExec = NodeDomain.exec("doFtp", getNodeDirectory(), file);
+			nodeExec = FtpDomain.exec("doFtp", getNodeDirectory(), file);
 		} else {
-			nodeExec = NodeDomain.exec("doFtpStdin", getNodeDirectory(), file, data);
+			console.log("doFtpStdin");
+			nodeExec = FtpDomain.exec("doFtpStdin", getNodeDirectory(), file, data);
 		}
 
 		nodeExec.done( function(){
@@ -28,6 +31,17 @@ define( function (require, exports, module){
 
 		nodeExec.fail( function(){
 			Logger.consoleDebug("nodeExec.fail()");
+		});
+
+		FtpDomain.on(domainResponse, function(event, response){
+			Logger.consoleDebug("nodeExec.on("+ domainResponse +")");
+			console.log(response);
+		});
+
+		FtpDomain.on(domainMessage, function(event, response){
+			Logger.consoleDebug("NodeExec.on("+ domainMessage + ")");
+			console.log(response);
+
 		});
 
 	}
@@ -45,6 +59,25 @@ define( function (require, exports, module){
 
 	function debug(){
 		Logger.consoleDebug("Domain.debug()");
+
+		var testScript = [];
+
+		testScript.push('OPEN CA11');
+		testScript.push('USER');
+		testScript.push('LYZLA01');
+		testScript.push('1SHADOW');
+		testScript.push('LS /a/lyzla01');
+		testScript.push('QUIT');
+
+		var scriptStr = '';
+		for (var i = 0; i < testScript.length; i ++){
+			scriptStr += testScript[i] + '\n';
+		}
+
+		var testFile   = 'scriptFile.txt';
+
+		invokeNode(testFile, scriptStr);
+
 	}
 
 	exports.debug = debug;
