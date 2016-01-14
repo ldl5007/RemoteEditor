@@ -322,7 +322,7 @@ define(function (require, exports) {
 			//Check to see if current is equal to "end" and then
 			//attempt to popScope. If popScope fails then there
 			//is an element in error
-			else if (current == "end" && !popScope(state)) {
+			else if (style != "comment" && current == "end" && !popScope(state)) {
 				return "error";
 			}
 
