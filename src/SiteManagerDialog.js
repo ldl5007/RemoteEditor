@@ -5,7 +5,7 @@ define (function (require, exports){
 		Strings      = require("../strings"),
 		Logger       = require("./Logger"),
 		SiteManager  = require("./SiteManager"),
-		Domain       = require("./Domain"),
+		FtpClient     = require("./FtpClient"),
 		FtpSiteDialog = require("./FtpSiteDialog");
 
 	var DialogTemplate = require("text!templates/site-manager-dialog.html");
@@ -98,7 +98,7 @@ define (function (require, exports){
 
 		console.log(selectedSite);
 
-		Domain.debug();
+		FtpClient.debug();
 	}
 
 	exports.show = show;

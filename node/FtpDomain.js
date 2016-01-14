@@ -395,8 +395,8 @@ maxerr: 50, node: true */
 
 			respondObj.stdout = output;
 
-			console.log('emit Event ' + domainRespond);
-			globalDomainManager.emitEvent(osFtpDomainName, domainRespond, respondObj);
+			console.log("emit Event " + domainResponse);
+			globalDomainManager.emitEvent(osFtpDomainName, domainResponse, respondObj);
 
             //log output
             console.log('stdout: ' + output);
