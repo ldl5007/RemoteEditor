@@ -20,7 +20,7 @@ define(function (require, exports) {
 
 		sitesManager = {};
 
-		var objString = Preferences.get(PREF_SITES_MANAGER) || [];
+		var objString = Preferences.get(PREF_SITES_MANAGER) || "{}";
 
 
 		if (Common.isSet(objString)) {
