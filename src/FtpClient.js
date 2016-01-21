@@ -6,15 +6,22 @@ define( function (require, exports, module){
 		FileUtils      = brackets.getModule("file/FileUtils"),
 		FileSystem     = brackets.getModule("filesystem/FileSystem");
 
-	var Logger       = require("src/Logger"),
+	var Logger              = require("src/Logger"),
+		ListSelectionDialog = require("src/ListSelectionDialog"),
 		DomainGlobal = require("src/DomainGlobal"),
 		EventEmitter = require("src/EventEmitter"),
 		Events       = require("src/Events"),
 		FtpDomain    = new NodeDomain(DomainGlobal.WinFtp.domainName, ExtensionUtils.getModulePath(module, "../node/WinFtpDomain"));
 
+	var _currSite,
+		_currDialog,
+		_dirList = [];
+
 	// Setup respond event listener
 	FtpDomain.on(DomainGlobal.WinFtp.scriptResult, function(event, response) {
 		Logger.consoleDebug("FtpDomain.on("+DomainGlobal.WinFtp.scriptResult+")");
+
+		EventEmitter.emitFactory(Events.FTP_CLIENT_CMD_RESPOND)(response);
 		console.log(response);
 	});
 
@@ -72,6 +79,14 @@ define( function (require, exports, module){
 		return dirStr;
 	}
 
+	function connect(site) {
+		Logger.consoleDebug("FtpClient.connect()");
+		_currSite = site;
+
+		_currDialog = ListSelectionDialog.newDialog(_dirList, _currSite.getRootDir());
+		_currDialog.show();
+	}
+
 	EventEmitter.on(Events.FTP_CLIENT_CMD_EXECUTE, function(site, cmdList) {
 		console.log(Events.FTP_CLIENT_CMD_EXECUTE);
 
@@ -81,5 +96,6 @@ define( function (require, exports, module){
 
 
 	exports.debug = debug;
+	exports.connect = connect;
 
 });

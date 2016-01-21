@@ -1,10 +1,11 @@
 define(function (require, exports){
 	"use strict";
 
-	var Dialogs      = brackets.getModule("widgets/Dialogs");
-	var Strings      = require("../strings");
-	var osftpCommon  = require("./common");
-	var osFtpGlobals = require('./globals');
+	var Dialogs = brackets.getModule("widgets/Dialogs");
+	var Strings = require("../strings"),
+		Logger  = require("./Logger"),
+		Common  = require("./Common"),
+		Globals = require('./Globals');
 
 	// debug
 	var tree         = require("./tree");
@@ -20,7 +21,7 @@ define(function (require, exports){
 		this.inputList = inputList;
 		this.listTitle = listTitle;
 
-		osftpCommon.consoleDebug(this.listTitle);
+		Logger.consoleDebug(this.listTitle);
 
 		this.treeData = tree.newFileTree('ListSelectionDialog');
 
@@ -35,8 +36,8 @@ define(function (require, exports){
 
 
 	ListSelectionDialog.prototype.show = function(){
-		osftpCommon.consoleDebug('ListSelectionDialog.show()');
-		if (!osftpCommon.isSet(this.dialog)){
+		Logger.consoleDebug('ListSelectionDialog.show()');
+		if (!Common.isSet(this.dialog)){
 			var compiledTemplate = Mustache.render(this.dialogTemplate, Strings);
 
 			this.dialog = Dialogs.showModalDialogUsingTemplate(compiledTemplate);
@@ -56,7 +57,7 @@ define(function (require, exports){
 	 **/
 
 	ListSelectionDialog.prototype.setTableTitle = function(inputStr){
-		osftpCommon.consoleDebug('ListSelectionDialog.setTableTitle('+inputStr+')');
+		Logger.consoleDebug('ListSelectionDialog.setTableTitle('+inputStr+')');
 		$('#list-label', this.$dialog).text(inputStr);
 	};
 
@@ -65,13 +66,13 @@ define(function (require, exports){
 	 **/
 
 	ListSelectionDialog.prototype.refreshTableData = function(treeNode){
-		osftpCommon.consoleDebug('ListSelectionDialog.refreshTableData()');
+		Logger.consoleDebug('ListSelectionDialog.refreshTableData()');
 		var $this = $('#list-table', this.$dialog);
 		var id    = $this.attr("id");
 
-		if (treeNode.type === osFtpGlobals.TREE_TYPE_ROOT){
+		if (treeNode.type === Globals.TREE_TYPE_ROOT){
 			var tableHtml = tree.generateHtmlTreeContainer(treeNode, id);
-			osftpCommon.consoleDebug(treeNode.htmlId);
+			Logger.consoleDebug(treeNode.htmlId);
 			$this.html(tableHtml, treeNode.divId);
 
 			var nodeHtml = tree.generateHtmlTreeNode(treeNode);
@@ -108,14 +109,14 @@ define(function (require, exports){
 	 **/
 
 	ListSelectionDialog.prototype.getSelectedList = function(){
-		osftpCommon.consoleDebug('ListSelectionDialog.getSelectedList()');
+		Logger.consoleDebug('ListSelectionDialog.getSelectedList()');
 		var returnList = [];
 
 		var children = this.treeData.getChildren();
 		for (var index in children){
 			var child = children[index];
 
-			if (child.type === osFtpGlobals.TREE_TYPE_FILE && child.isSelected){
+			if (child.type === Globals.TREE_TYPE_FILE && child.isSelected){
 			   returnList.push(child.relativePath);
 			}
 		}
@@ -128,7 +129,7 @@ define(function (require, exports){
 	 **/
 
 	ListSelectionDialog.prototype.checkAll = function(){
-		osftpCommon.consoleDebug('ListSelectionDialog.checkAll()');
+		Logger.consoleDebug('ListSelectionDialog.checkAll()');
 
 		$('input:checkbox', this.$dialog).each(function(){
 			$(this).prop('checked', true);
@@ -144,7 +145,7 @@ define(function (require, exports){
 		var total    = treeNode.getTotalFilesCount();
 
 		var dispText = selected + '/' + total + ' ' + Strings.SELECTED;
-		osftpCommon.consoleDebug(dispText);
+		Logger.consoleDebug(dispText);
 		$('#dialog-status', $dialog).text(dispText);
 	}
 
@@ -160,7 +161,7 @@ define(function (require, exports){
 			var padSize = 0;
 
 			var basePadding = $("#list-selection-dialog .level1").css('padding-left');
-			if (osftpCommon.isSet(basePadding)){
+			if (Common.isSet(basePadding)){
 				padSize = Number(basePadding.replace('px','')) * Number(level);
 			}
 
@@ -170,7 +171,7 @@ define(function (require, exports){
 				var toggleSize = $("#list-selection-dialog .toggle").css('width');
 				var togglePad  = $("#list-selection-dialog .toggle").css('padding-right');
 
-				if (osftpCommon.isSet(toggleSize) && osftpCommon.isSet(togglePad)){
+				if (Common.isSet(toggleSize) && Common.isSet(togglePad)){
 					padSize += Number(toggleSize.replace('px','')) + Number(togglePad.replace('px',''));
 				}
 

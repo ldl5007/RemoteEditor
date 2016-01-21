@@ -98,7 +98,7 @@ define (function (require, exports){
 
 		console.log(selectedSite);
 
-		FtpClient.debug(selectedSite);
+		FtpClient.connect(selectedSite);
 	}
 
 	exports.show = show;
