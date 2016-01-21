@@ -7,4 +7,7 @@ define(function (require, exports) {
 	exports.FTP_DOMAIN_MESSAGE = 'reEd.ftp.domain.msg';
 	exports.FTP_DOMAIN_DATA    = 'reEd.ftp.domain.data';
 
+	exports.FTP_CLIENT_CMD_EXECUTE = 'reEd.ftpClient.execute';
+	exports.FTP_CLIENT_CMD_RESPOND = 'reEd.ftpClient.respond';
+
 });

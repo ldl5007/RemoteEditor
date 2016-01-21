@@ -1,0 +1,7 @@
+OPEN ca11
+USER
+lyzla01
+1shadow
+CD /a/lyzla01
+LS
+QUIT

@@ -28,9 +28,12 @@
 			_runScript,
 			runScript,
 			false,
-			"run FTP script",
-			[{
-				name:'ftpScript',
+			"run FTP script", [{
+				name:'scriptId',
+				type:'string',
+				description:'script unique ID'
+			},{
+				name:'script',
 				type:'string',
 				description:'ftp script to be invoke'
 			}]
@@ -46,20 +49,49 @@
 				type: 'object',
 				description: 'response object'
 			}]
-		)
+		);
 	}
 
-	function runScript(script) {
-		console.log("WinFtpDomain.runScript("+script+")");
+	function runScript(scriptId, script) {
+		console.log("WinFtpDomain.runScript(" + scriptId + ")");
 
-		var result = {
-			code: 0,
-			data: 'testing'
-		};
+		var child;
 
-		console.log(result);
+		var result = {};
+		result.stdout = [];
+		result.stderr = [];
 
-		_domainManager.emitEvent(_domainName, _scriptResult, result);
+		result.scriptId = scriptId;
+
+		// Spawn a process to issue the FTP command
+		var spawn = require('child_process').spawn;
+		var os    = require('os');
+
+		if (os.platform() == 'win32'){
+			child = spawn('ftp', ['-ins:' + script]);
+		} else {
+
+			// Place holder for other OSs
+			child = spawn('cmd.exe', ['dir']);
+		}
+
+		child.stdin.end();
+
+		child.stderr.on('data', function (buffer){
+			result.stderr.push(buffer.toString());
+		});
+
+		child.stdout.on('data', function (buffer){
+			result.stdout.push(buffer.toString());
+		});
+
+		child.on('close', function(code) {
+			result.code = code;
+
+			console.log(result);
+
+			_domainManager.emitEvent(_domainName, _scriptResult, result);
+		});
 	}
 
 
