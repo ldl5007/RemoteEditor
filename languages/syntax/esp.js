@@ -306,7 +306,7 @@ define(function (require, exports) {
 			//Handle indenting scopes
 			//pushing a scope will increase the indent
 			//popping a scope will decrease the indent			
-			if (current == "do" || current == "procedure") {
+			if (current == "do" || current == "procedure" || current == "select") {
 				pushScope(stream, state, "esp");
 			} else if (current == "then") {
 				if (stream.eol()) {
