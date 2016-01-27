@@ -26,7 +26,7 @@ define(function (require, exports){
 		this.treeData = tree.newFileTree('ListSelectionDialog');
 
 		for (var i = 0; i < inputList.length; i++){
-			this.treeData.addRelativePath(inputList[i], true);
+			this.treeData.addRelativePath(inputList[i], false);
 		}
 	}
 
@@ -47,10 +47,14 @@ define(function (require, exports){
 
 			this.refreshTableData(this.treeData);
 
+			this.$dialog
+				.on("change", "#dir-text", dirTextChangedHandler);
+
 		} else {
 			alert("dialog is already shown");
 		}
 	};
+
 
 	/**
 	 *
@@ -58,7 +62,7 @@ define(function (require, exports){
 
 	ListSelectionDialog.prototype.setTableTitle = function(inputStr){
 		Logger.consoleDebug('ListSelectionDialog.setTableTitle('+inputStr+')');
-		$('#list-label', this.$dialog).text(inputStr);
+		$('#dir-text', this.$dialog).val(inputStr);
 	};
 
 	/**
@@ -136,6 +140,14 @@ define(function (require, exports){
 		});
 
 	};
+
+	/**
+	 *
+	 **/
+	function dirTextChangedHandler() {
+		Logger.consoleDebug("dirTextChangedHandler()");
+	}
+
 
 	/**
 	 *

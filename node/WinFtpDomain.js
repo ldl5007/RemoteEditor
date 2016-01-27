@@ -7,7 +7,8 @@
 	var _domainManager,
 		_domainName = "reEd-WinFtp",
 		_runScript    = _domainName + "-runScript",
-		_scriptResult = _domainName + '-scriptResult';
+		_scriptResult = _domainName + '-scriptResult',
+		_currProcess  = null;
 
 	function init(domainManager){
 		console.log("WinFtpDomain.init()");
@@ -55,11 +56,9 @@
 	function runScript(scriptId, script) {
 		console.log("WinFtpDomain.runScript(" + scriptId + ")");
 
-		var child;
-
 		var result = {};
-		result.stdout = [];
-		result.stderr = [];
+		result.stdout = "";
+		result.stderr = "";
 
 		result.scriptId = scriptId;
 
@@ -68,24 +67,24 @@
 		var os    = require('os');
 
 		if (os.platform() == 'win32'){
-			child = spawn('ftp', ['-ins:' + script]);
+			_currProcess = spawn('ftp', ['-ins:' + script]);
 		} else {
 
 			// Place holder for other OSs
-			child = spawn('cmd.exe', ['dir']);
+			_currProcess = spawn('cmd.exe', ['dir']);
 		}
 
-		child.stdin.end();
+		_currProcess.stdin.end();
 
-		child.stderr.on('data', function (buffer){
-			result.stderr.push(buffer.toString());
+		_currProcess.stderr.on('data', function (buffer){
+			result.stderr += buffer.toString();
 		});
 
-		child.stdout.on('data', function (buffer){
-			result.stdout.push(buffer.toString());
+		_currProcess.stdout.on('data', function (buffer){
+			result.stdout += buffer.toString();
 		});
 
-		child.on('close', function(code) {
+		_currProcess.on('close', function(code) {
 			result.code = code;
 
 			console.log(result);

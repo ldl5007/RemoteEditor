@@ -4,7 +4,9 @@ define( function (require, exports, module){
 	var ExtensionUtils = brackets.getModule("utils/ExtensionUtils"),
 		NodeDomain     = brackets.getModule("utils/NodeDomain"),
 		FileUtils      = brackets.getModule("file/FileUtils"),
-		FileSystem     = brackets.getModule("filesystem/FileSystem");
+		FileSystem     = brackets.getModule("filesystem/FileSystem"),
+		ProjectManager = brackets.getModule("project/ProjectManager"),
+		StringUtils    = brackets.getModule("utils/StringUtils");
 
 	var Logger              = require("src/Logger"),
 		ListSelectionDialog = require("src/ListSelectionDialog"),
@@ -13,28 +15,32 @@ define( function (require, exports, module){
 		Events       = require("src/Events"),
 		FtpDomain    = new NodeDomain(DomainGlobal.WinFtp.domainName, ExtensionUtils.getModulePath(module, "../node/WinFtpDomain"));
 
-	var _currSite,
-		_currDialog,
+	var _currSite = null,
+		_currDialog = null,
 		_dirList = [];
 
 	// Setup respond event listener
 	FtpDomain.on(DomainGlobal.WinFtp.scriptResult, function(event, response) {
 		Logger.consoleDebug("FtpDomain.on("+DomainGlobal.WinFtp.scriptResult+")");
 
-		EventEmitter.emitFactory(Events.FTP_CLIENT_CMD_RESPOND)(response);
-		console.log(response);
+		// Clean up script file
+		var scriptFile = FileSystem.getFileForPath(getScriptFilePath());
+		ProjectManager.deleteItem(scriptFile);
+
+		if (response.code === 0){
+			if (response.scriptId == Events.FTP_CLIENT_CMD_LS){
+				var lsOutputArr = parseLsCmdResponse(response.stdout);
+
+				console.log(lsOutputArr);
+
+				var dialog = ListSelectionDialog.newDialog(lsOutputArr, _currSite.getRootDir());
+				dialog.show();
+			}
+		}
+
+//		EventEmitter.emitFactory(Events.FTP_CLIENT_CMD_RESPOND)(response);
+//		console.log(response);
 	});
-
-
-	function debug(site){
-		var scriptFilePath = generateFtpScript(site, ["LS"]);
-		console.log(scriptFilePath);
-
-		EventEmitter.emitFactory(Events.FTP_CLIENT_CMD_EXECUTE)(site, "dummy");
-
-		//FtpDomain.exec(DomainGlobal.WinFtp.runScript, "testId", scriptFilePath);
-
-	}
 
 	function generateFtpScript(site, cmdList){
 		Logger.consoleDebug("FtpClient.generateFtpScript()");
@@ -46,8 +52,6 @@ define( function (require, exports, module){
 		newScript.push("USER");
 		newScript.push(site.getUserName());
 		newScript.push(site.getPassword());
-
-		newScript.push("CD " + site.getRootDir());
 
 		// Commands
 		for (var index = 0; index < cmdList.length; index++){
@@ -64,20 +68,16 @@ define( function (require, exports, module){
 			scriptStr += newScript[i] + "\n";
 		}
 
-
-		// Write to file
-		var dirStr = FileUtils.getNativeModuleDirectoryPath(module);
-		var extDir = dirStr.split("\/");
-		extDir.pop();
-		extDir.push("scripts/testScript.txt");
-		dirStr = extDir.join("\/");
-
-
-		var newFile = FileSystem.getFileForPath(dirStr);
+		var scriptFile = getScriptFilePath();
+		var newFile = FileSystem.getFileForPath(getScriptFilePath());
 		newFile.write(scriptStr);
 
-		return dirStr;
+		return scriptFile;
 	}
+
+	/**
+	 *
+	 **/
 
 	function connect(site) {
 		Logger.consoleDebug("FtpClient.connect()");
@@ -85,17 +85,101 @@ define( function (require, exports, module){
 
 		_currDialog = ListSelectionDialog.newDialog(_dirList, _currSite.getRootDir());
 		_currDialog.show();
+
+		EventEmitter.emitFactory(Events.FTP_CLIENT_CMD_LS)(_currSite.getRootDir());
 	}
 
-	EventEmitter.on(Events.FTP_CLIENT_CMD_EXECUTE, function(site, cmdList) {
-		console.log(Events.FTP_CLIENT_CMD_EXECUTE);
+	/**
+	 *
+	 **/
+	function getScriptFilePath(){
+		// Write to file
+		var dirStr = FileUtils.getNativeModuleDirectoryPath(module);
+		var extDir = dirStr.split("\/");
+		extDir.pop();
+		extDir.push("scripts/testScript.txt");
+		dirStr = extDir.join("\/");
 
-		console.log(site);
-		console.log(cmdList);
+		return dirStr;
+	}
+
+
+	/**
+	 *
+	 **/
+
+	function parseLsCmdResponse(respStr){
+		Logger.consoleDebug("FtpClient.parseLsCmdResponse()");
+
+		var returnArr = [];
+		var lsOutputArr = [];
+		var dirStr = "";
+		var newStr = "";
+		var isDirStr     = false;
+		var isCollecting = false;
+		var isSystemZ    = false;
+
+		var strArr = StringUtils.getLines(respStr);
+		while(strArr.length > 0){
+			newStr = strArr.splice(0, 1)[0];
+
+			if (isCollecting){
+				lsOutputArr.push(newStr);
+			}
+
+			if (isDirStr){
+				dirStr = newStr.split('"').splice(1,1);
+				isDirStr = false;
+			}
+
+			if (newStr.indexOf("PWD") != -1){
+				isDirStr = true;
+			}
+
+			if (newStr.indexOf("total") != -1){
+				isCollecting = true;
+			}
+
+			if (newStr.indexOf("LS") != -1){
+				isCollecting = false;
+			}
+		}
+
+		for (var index = 0; index < lsOutputArr.length; index++){
+			strArr = lsOutputArr[index].split(" ");
+
+			// If this is a USS output
+			if (!isSystemZ){
+				if (strArr[0].indexOf('d') != -1){
+					newStr = strArr[strArr.length - 1] + "/";
+				} else {
+					newStr = strArr[strArr.length - 1];
+				}
+
+				returnArr.push(dirStr + "/" + newStr);
+			}
+		}
+
+		return returnArr;
+	}
+
+
+
+	/**
+	 *
+	 **/
+	EventEmitter.on(Events.FTP_CLIENT_CMD_LS, function (listDir) {
+		Logger.consoleDebug("FtpClient Event: " + Events.FTP_CLIENT_CMD_LS);
+
+		var cmdArr = [];
+		cmdArr.push("CD " + listDir);
+		cmdArr.push("PWD");
+		cmdArr.push("LS");
+
+		var scriptFilePath = generateFtpScript(_currSite, cmdArr);
+		FtpDomain.exec(DomainGlobal.WinFtp.runScript, Events.FTP_CLIENT_CMD_LS, scriptFilePath);
 	});
 
-
-	exports.debug = debug;
 	exports.connect = connect;
 
 });

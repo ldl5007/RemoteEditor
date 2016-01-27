@@ -9,5 +9,8 @@ define(function (require, exports) {
 
 	exports.FTP_CLIENT_CMD_EXECUTE = 'reEd.ftpClient.execute';
 	exports.FTP_CLIENT_CMD_RESPOND = 'reEd.ftpClient.respond';
+	exports.FTP_CLIENT_CMD_LS      = 'reEd.ftpClient.ls';
+	exports.FTP_CLIENT_CMD_GET     = 'reEd.ftpClient.get';
+	exports.FTP_CLIENT_CMD_PUT     = 'reEd.ftpClient.put';
 
 });
