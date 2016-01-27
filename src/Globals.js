@@ -10,6 +10,7 @@ define(function (require, exports) {
 	exports.TREE_TYPE_ROOT    = "TREE_TYPE_ROOT";
 	exports.TREE_TYPE_DIR     = "TREE_TYPE_DIR";
 	exports.TREE_TYPE_FILE    = "TREE_TYPE_FILE";
+	exports.TREE_TYPE_UNKNOWN = "Unknown";
 
 	exports.DEFAULT_REMOTE_OS = "zOS";
 

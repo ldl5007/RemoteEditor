@@ -17,12 +17,14 @@ define (function (require, exports){
 		this.childFiles = [];
 
 		this.isSelected = false;
+		this.isSelectable = true;
 	}
 
 	/**
 	 * Add child directory node to the current node
 	 **/
 	TreeNode.prototype.addChildDir = function(dirName, relativePath, isSelected){
+		Logger.consoleDebug("TreeNode.prototype.addChildDir("+dirName+")");
 		if (this.getChildDirIndexByName(dirName) === -1){
 			var newNode = new TreeNode(dirName);
 			newNode.parent = this;
@@ -34,8 +36,6 @@ define (function (require, exports){
 
 			this.childDirs.push(newNode);
 			registerTreeNode(newNode);
-
-			Logger.consoleDebug(newNode);
 		}
 	};
 
@@ -43,6 +43,7 @@ define (function (require, exports){
 	 * Add child file node to the current node
 	 **/
 	TreeNode.prototype.addChildFiles = function(fileName, relativePath, isSelected){
+		Logger.consoleDebug("TreeNode.prototype.addChildFile("+fileName+")");
 		// Validate imput
 		if (this.getChildFileIndexByName(fileName) === -1){
 			var newNode = new TreeNode(fileName);
@@ -55,9 +56,25 @@ define (function (require, exports){
 
 			this.childFiles.push(newNode);
 			registerTreeNode(newNode);
-
-			Logger.consoleDebug(newNode);
 		}
+	};
+
+	/**
+	 *
+	 **/
+	TreeNode.prototype.addDummyFile = function(){
+		Logger.consoleDebug("TreeNode.prototype.addDummyFile()");
+
+		var newNode = new TreeNode(Globals.TREE_TYPE_UNKNOWN);
+		newNode.parent = this;
+		newNode.type   = Globals.TREE_TYPE_FILE;
+		newNode.level  = this.level + 1;
+
+		newNode.relativePath = this.relativePath;
+		newNode.isSelected   = false;
+		newNode.isSelectable = false;
+
+		this.childFiles.push(newNode);
 	};
 
 	/**
@@ -82,6 +99,10 @@ define (function (require, exports){
 		// Loop through and build the tree
 		for (var i = 0; i < listDir.length - 1; i++){
 			nodeName = listDir[i];
+			if (nodeName === ''){
+				nodeName = '/';
+			}
+
 			if (currPath === ''){
 				currPath = listDir[i];
 			} else {
@@ -92,8 +113,13 @@ define (function (require, exports){
 			currNode = currNode.childDirs[currNode.getChildDirIndexByName(nodeName)];
 		}
 
-		// The last element of the array is always the file.
-		currNode.addChildFiles(listDir[listDir.length - 1], filePath, isSelected);
+		var fileName = listDir[listDir.length - 1];
+		if (fileName !== ''){
+			// The last element of the array is always the file.
+			currNode.addChildFiles(listDir[listDir.length - 1], filePath, isSelected);
+		} else {
+			currNode.addDummyFile();
+		}
 
 	};
 
@@ -257,7 +283,7 @@ define (function (require, exports){
 	 **/
 
 	function generateHtmlTreeContainer(treeNode, treeDiv){
-		Logger.consoleDebug("generateHtmlTreeContainer()");
+		Logger.consoleDebug("Tree.generateHtmlTreeContainer()");
 		var tableId = treeDiv + '-tree';
 
 		var html = '<table id="' + tableId + '" class="table table-striped table-bordered">';
@@ -273,7 +299,7 @@ define (function (require, exports){
 	 **/
 
 	function generateHtmlTreeNode(treeNode){
-		Logger.consoleDebug('generateHtmlTreeNode()');
+		Logger.consoleDebug('Tree.generateHtmlTreeNode()');
 
 		var nodeId, currNode;
 		var html = '';
@@ -311,14 +337,15 @@ define (function (require, exports){
 			html += 'data-depth="' + treeNode.level + '" class="collapse level' + treeNode.level + '">';
 
 			html += '<td treeNode type="file-node" data-depth="' + treeNode.level + '">';
-			html += '<input type="checkbox" ';
+			if (currNode.isSelectable){
+				html += '<input type="checkbox" ';
 
-			if (currNode.isSelected){
-				html += 'checked';
+				if (currNode.isSelected){
+					html += 'checked';
+				}
+
+				html += '/>';
 			}
-
-			html += '/>';
-
 			html += currNode.name;
 			html += '<input type="hidden" value="' + currNode.relativePath + '"/>';
 			html += '</td>';
@@ -356,8 +383,8 @@ define (function (require, exports){
 	}
 
 	function registerTreeNode(node){
+		Logger.consoleDebug("Tree.registerTreeNode("+node.name+")");
 		var rootNode = node.getRootNode();
-		Logger.consoleDebug(rootNode);
 		rootNode.nodeInventory[node.id] = node;
 	}
 
