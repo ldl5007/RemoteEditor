@@ -45,7 +45,7 @@ define(function (require, exports){
 
 			this.setTableTitle(this.listTitle);
 
-			this.refreshTableData(this.treeData);
+			refreshTableData(this.treeData, this.$dialog);
 
 			this.$dialog
 				.on("change", "#dir-text", dirTextChangedHandler);
@@ -53,6 +53,16 @@ define(function (require, exports){
 		} else {
 			alert("dialog is already shown");
 		}
+	};
+
+	/**
+	 *
+	 **/
+
+	ListSelectionDialog.prototype.addFilePath = function(newPath){
+		Logger.consoleDebug("ListSelectionDialog.addFilePath()");
+
+		this.treeData.addRelativePath(newPath, false);
 	};
 
 
@@ -63,33 +73,6 @@ define(function (require, exports){
 	ListSelectionDialog.prototype.setTableTitle = function(inputStr){
 		Logger.consoleDebug('ListSelectionDialog.setTableTitle('+inputStr+')');
 		$('#dir-text', this.$dialog).val(inputStr);
-	};
-
-	/**
-	 *
-	 **/
-
-	ListSelectionDialog.prototype.refreshTableData = function(treeNode){
-		Logger.consoleDebug('ListSelectionDialog.refreshTableData()');
-		var $this = $('#list-table', this.$dialog);
-		var id    = $this.attr("id");
-
-		if (treeNode.type === Globals.TREE_TYPE_ROOT){
-			var tableHtml = tree.generateHtmlTreeContainer(treeNode, id);
-			Logger.consoleDebug(treeNode.htmlId);
-			$this.html(tableHtml, treeNode.divId);
-
-			var nodeHtml = tree.generateHtmlTreeNode(treeNode);
-			$("#" + treeNode.htmlId, this.$dialog).html(nodeHtml);
-		}
-
-		formatTreeNode(treeNode, this.$dialog);
-
-		//Reset toggle listeners
-		resetTreeToggle(treeNode, this.$dialog);
-		resetTreeCheckbox(treeNode, this.$dialog);
-
-		updateSelectedFileCount(treeNode, this.$dialog);
 	};
 
 	/**
@@ -131,6 +114,13 @@ define(function (require, exports){
 	/**
 	 *
 	 **/
+	ListSelectionDialog.prototype.refresh = function(){
+		refreshTableData(this.treeData, this.$dialog);
+	};
+
+	/**
+	 *
+	 **/
 
 	ListSelectionDialog.prototype.checkAll = function(){
 		Logger.consoleDebug('ListSelectionDialog.checkAll()');
@@ -146,6 +136,34 @@ define(function (require, exports){
 	 **/
 	function dirTextChangedHandler() {
 		Logger.consoleDebug("dirTextChangedHandler()");
+	}
+
+
+	/**
+	 *
+	 **/
+
+	function refreshTableData(treeNode, $dialog){
+		Logger.consoleDebug('ListSelectionDialog.refreshTableData()');
+		var $this = $('#list-table', $dialog);
+		var id    = $this.attr("id");
+
+		if (treeNode.type === Globals.TREE_TYPE_ROOT){
+			var tableHtml = tree.generateHtmlTreeContainer(treeNode, id);
+			Logger.consoleDebug(treeNode.htmlId);
+			$this.html(tableHtml, treeNode.divId);
+
+			var nodeHtml = tree.generateHtmlTreeNode(treeNode);
+			$("#" + treeNode.htmlId, $dialog).html(nodeHtml);
+		}
+
+		formatTreeNode(treeNode, $dialog);
+
+		//Reset toggle listeners
+		resetTreeToggle(treeNode, $dialog);
+		resetTreeCheckbox(treeNode, $dialog);
+
+		updateSelectedFileCount(treeNode, $dialog);
 	}
 
 

@@ -33,8 +33,11 @@ define( function (require, exports, module){
 
 				console.log(lsOutputArr);
 
-				var dialog = ListSelectionDialog.newDialog(lsOutputArr, _currSite.getRootDir());
-				dialog.show();
+				for (var index = 0; index < lsOutputArr.length; index++ ){
+					_currDialog.addFilePath(lsOutputArr[index]);
+				}
+
+				_currDialog.refresh();
 			}
 		}
 
