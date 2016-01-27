@@ -64,6 +64,9 @@ define({
 	CHECKBOX_WRITE: "Write",
 	CHECKBOX_EXECUTE: "Execute",
 
+	EMPTY_DIRECTORY: "Empty directory",
+	UNKNOWN        : "Unknown",
+
     "MY_DOCUMENTS"                      : "My Documents",
     "DOCUMENTS"                         : "Documents",
     "MENU_TITLE"                        : "New Project…",

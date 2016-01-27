@@ -115,7 +115,19 @@ define(function (require, exports){
 	 *
 	 **/
 	ListSelectionDialog.prototype.refresh = function(){
+		Logger.consoleDebug("ListSelectionDialog.refresh()");
 		refreshTableData(this.treeData, this.$dialog);
+	};
+
+	/**
+	 *
+	 **/
+	ListSelectionDialog.prototype.navigateTo = function(navPath){
+		Logger.consoleDebug("ListSelectionDialog.navigateTo("+navPath+")");
+
+		// Check if navPath existed.
+
+
 	};
 
 	/**
@@ -249,6 +261,9 @@ define(function (require, exports){
 				tr.removeClass('expand').addClass('collapse');
 				// if the html is not generated then will have to generate and append to the list
 				var node = treeNode.getNodeByHtmlId(trId);
+
+				console.log(node.dirStatus);
+
 				if (node.isNodeHtmlGenerated()){
 					children.show();
 				} else {

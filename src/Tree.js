@@ -4,7 +4,8 @@ define (function (require, exports){
 	var FileUtils = brackets.getModule("file/FileUtils"),
 		Common    = require("src/Common"),
 		Globals   = require("src/Globals"),
-		Logger    = require("src/Logger");
+		Logger    = require("src/Logger"),
+		Strings   = require("Strings");
 
 	var nodeId = 0;
 
@@ -16,6 +17,7 @@ define (function (require, exports){
 		this.childDirs  = [];
 		this.childFiles = [];
 
+		this.dirStatus  = Globals.TREE_DIR_STATUS_UNKNOWN;
 		this.isSelected = false;
 		this.isSelectable = true;
 	}
@@ -36,6 +38,8 @@ define (function (require, exports){
 
 			this.childDirs.push(newNode);
 			registerTreeNode(newNode);
+
+			this.dirStatus = Globals.TREE_DIR_STATUS_VALID;
 		}
 	};
 
@@ -56,6 +60,8 @@ define (function (require, exports){
 
 			this.childFiles.push(newNode);
 			registerTreeNode(newNode);
+
+			this.dirStatus = Globals.TREE_DIR_STATUS_VALID;
 		}
 	};
 
@@ -65,7 +71,7 @@ define (function (require, exports){
 	TreeNode.prototype.addDummyFile = function(){
 		Logger.consoleDebug("TreeNode.prototype.addDummyFile()");
 
-		var newNode = new TreeNode(Globals.TREE_TYPE_UNKNOWN);
+		var newNode = new TreeNode(Strings.UNKNOWN);
 		newNode.parent = this;
 		newNode.type   = Globals.TREE_TYPE_FILE;
 		newNode.level  = this.level + 1;
