@@ -262,8 +262,6 @@ define(function (require, exports){
 				// if the html is not generated then will have to generate and append to the list
 				var node = treeNode.getNodeByHtmlId(trId);
 
-				console.log(node.dirStatus);
-
 				if (node.isNodeHtmlGenerated()){
 					children.show();
 				} else {

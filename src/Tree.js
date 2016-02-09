@@ -4,8 +4,7 @@ define (function (require, exports){
 	var FileUtils = brackets.getModule("file/FileUtils"),
 		Common    = require("src/Common"),
 		Globals   = require("src/Globals"),
-		Logger    = require("src/Logger"),
-		Strings   = require("Strings");
+		Logger    = require("src/Logger");
 
 	var nodeId = 0;
 
@@ -17,7 +16,6 @@ define (function (require, exports){
 		this.childDirs  = [];
 		this.childFiles = [];
 
-		this.dirStatus  = Globals.TREE_DIR_STATUS_UNKNOWN;
 		this.isSelected = false;
 		this.isSelectable = true;
 	}
@@ -38,8 +36,6 @@ define (function (require, exports){
 
 			this.childDirs.push(newNode);
 			registerTreeNode(newNode);
-
-			this.dirStatus = Globals.TREE_DIR_STATUS_VALID;
 		}
 	};
 
@@ -60,27 +56,7 @@ define (function (require, exports){
 
 			this.childFiles.push(newNode);
 			registerTreeNode(newNode);
-
-			this.dirStatus = Globals.TREE_DIR_STATUS_VALID;
 		}
-	};
-
-	/**
-	 *
-	 **/
-	TreeNode.prototype.addDummyFile = function(){
-		Logger.consoleDebug("TreeNode.prototype.addDummyFile()");
-
-		var newNode = new TreeNode(Strings.UNKNOWN);
-		newNode.parent = this;
-		newNode.type   = Globals.TREE_TYPE_FILE;
-		newNode.level  = this.level + 1;
-
-		newNode.relativePath = this.relativePath;
-		newNode.isSelected   = false;
-		newNode.isSelectable = false;
-
-		this.childFiles.push(newNode);
 	};
 
 	/**
@@ -123,10 +99,7 @@ define (function (require, exports){
 		if (fileName !== ''){
 			// The last element of the array is always the file.
 			currNode.addChildFiles(listDir[listDir.length - 1], filePath, isSelected);
-		} else {
-			currNode.addDummyFile();
 		}
-
 	};
 
 	/**
