@@ -19,6 +19,21 @@ define (function (require, exports){
 	}
 
 
+	/**
+	 * Return root node of the current node.
+	 **/
+
+	TreeNode.prototype.getRootNode = function(){
+		var rootNode = this;
+
+		while (Common.isSet(rootNode.parent)){
+			rootNode = rootNode.parent;
+		}
+
+		return rootNode;
+	}
+
+
 	TreeNode.prototype.debugPrint = function(){
 		Logger.consoleDebug('parent:    ' + this.parent);
 		Logger.consoleDebug('name:      ' + this.name);
