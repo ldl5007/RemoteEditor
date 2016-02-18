@@ -68,7 +68,6 @@ define (function (require, exports){
 		if (typeof filePath !== 'string'){
 			return false;
 		}
-
 		// parse the input path into an array of directories
 		filePath = FileUtils.convertWindowsPathToUnixPath(filePath);
 		var listDir = filePath.split('/');

@@ -6,6 +6,7 @@ define(function (require, exports) {
 	exports.OBJECT_ID_FILE_INFO = "FILE_INFO_OBJECT";
 	exports.OBJECT_ID_FTP_SITE  = "FTP_SITE_OBJECT";
 	exports.OBJECT_ID_DIR_TREE  = "DIR_TREE_OBJECT";
+	exports.OBJECT_ID_TREE_NODE = "TREE_NODE_OBJECT";
 
 	exports.TREE_TYPE_ROOT    = "TREE_TYPE_ROOT";
 	exports.TREE_TYPE_DIR     = "TREE_TYPE_DIR";
