@@ -4,11 +4,12 @@ define (function (require, exports){
 	var FileUtils = brackets.getModule("file/FileUtils"),
 		Common    = require("src/Common"),
 		Globals   = require("src/Globals"),
-		Logger    = require("src/Logger");
+		Logger    = require("src/Logger"),
+		TreeNode  = require("src/TreeNode");
 
 	var nodeId = 0;
 
-	function TreeNode(name){
+	function Tree(name){
 		this.parent     = null;
 		this.id         = newNodeId();
 		this.name       = name || '';
@@ -18,15 +19,46 @@ define (function (require, exports){
 
 		this.isSelected = false;
 		this.isSelectable = true;
+
+		this._rootNode = null;
+		this._nodeInventory = [];
+		this._currentId = 0;
 	}
+
+	Tree.prototype.generateId = function(){
+		var id = this._currentId;
+		this._currentId++;
+
+		return id;
+	};
+
+	Tree.prototype.registerTreeNode = function(treeNode){
+		Logger.consoleDebug("Tree.registerTreeNode()");
+		if (TreeNode.validate(treeNode)){
+			Logger.consoleDebug("Registered: " + treeNode.getPath());
+			this._nodeInventory[treeNode.getPath()] = treeNode;
+
+			console.log(this._nodeInventory);
+		}
+		else{
+			Logger.consoleDebug("Unable to register: " + treeNode);
+		}
+	};
+
+	/**
+	 *
+	 **/
+	Tree.prototype.getNodeByPath = function(path){
+		return this._nodeInventory[path];
+	};
 
 	/**
 	 * Add child directory node to the current node
 	 **/
-	TreeNode.prototype.addChildDir = function(dirName, relativePath, isSelected){
-		Logger.consoleDebug("TreeNode.prototype.addChildDir("+dirName+")");
+	Tree.prototype.addChildDir = function(dirName, relativePath, isSelected){
+		Logger.consoleDebug("Tree.prototype.addChildDir("+dirName+")");
 		if (this.getChildDirIndexByName(dirName) === -1){
-			var newNode = new TreeNode(dirName);
+			var newNode = new Tree(dirName);
 			newNode.parent = this;
 			newNode.type   = Globals.TREE_TYPE_DIR;
 			newNode.level  = this.level + 1;
@@ -42,11 +74,11 @@ define (function (require, exports){
 	/**
 	 * Add child file node to the current node
 	 **/
-	TreeNode.prototype.addChildFiles = function(fileName, relativePath, isSelected){
-		Logger.consoleDebug("TreeNode.prototype.addChildFile("+fileName+")");
+	Tree.prototype.addChildFiles = function(fileName, relativePath, isSelected){
+		Logger.consoleDebug("Tree.prototype.addChildFile("+fileName+")");
 		// Validate imput
 		if (this.getChildFileIndexByName(fileName) === -1){
-			var newNode = new TreeNode(fileName);
+			var newNode = new Tree(fileName);
 			newNode.parent = this;
 			newNode.type   = Globals.TREE_TYPE_FILE;
 			newNode.level  = this.level + 1;
@@ -59,20 +91,53 @@ define (function (require, exports){
 		}
 	};
 
+	Tree.prototype.addPath = function(filePath, isSelected){
+		Logger.consoleDebug("Tree.addPath("+filePath+")");
+		var newNode = this.getNodeByPath(filePath);
+		var parentNode = null;
+		if (!Common.isSet(newNode)){
+			var name = FileUtils.stripTrailingSlash(filePath);
+			console.log(name);
+			name     = FileUtils.getBaseName(name);
+			console.log(name);
+			newNode = TreeNode.newTreeNode(name, filePath, this.generateId(), isSelected);
+
+			var parentPath = FileUtils.getParentPath(filePath);
+			if (parentPath === '/' || parentPath === ''){
+				parentNode = TreeNode.newTreeNode(parentPath, parentPath, this.generateId(), isSelected);
+				this.registerTreeNode(parentNode);
+				this._rootNode = parentNode;
+			}
+			else{
+				parentNode = this.addPath(parentPath, isSelected);
+			}
+
+			parentNode.addChild(newNode);
+			this.registerTreeNode(newNode);
+		}
+
+		return newNode;
+	};
+
 	/**
 	 * Build the tree relative path from the root.
 	 **/
 
-	TreeNode.prototype.addRelativePath = function(filePath, isSelected){
-		Logger.consoleDebug('TreeNode.addRelativePath(' + filePath + ')');
+	Tree.prototype.addRelativePath = function(filePath, isSelected){
+		Logger.consoleDebug('Tree.addRelativePath(' + filePath + ')');
 		if (typeof filePath !== 'string'){
 			return false;
 		}
+
+		this.addPath(filePath, isSelected);
+		console.log(this._rootNode);
+
+		var currPath = '';
+
 		// parse the input path into an array of directories
 		filePath = FileUtils.convertWindowsPathToUnixPath(filePath);
 		var listDir = filePath.split('/');
 		var currNode = this.getRootNode();
-		var currPath = '';
 		var nodeName = '';
 
 		Logger.consoleDebug(listDir);
@@ -104,7 +169,7 @@ define (function (require, exports){
 	/**
 	 * Return root node
 	 **/
-	TreeNode.prototype.getRootNode = function(){
+	Tree.prototype.getRootNode = function(){
 		var currNode = this;
 
 		while(currNode.type !== Globals.TREE_TYPE_ROOT){
@@ -117,7 +182,7 @@ define (function (require, exports){
 	/**
 	 *
 	 **/
-	TreeNode.prototype.getChildDirIndexByName = function (dirName){
+	Tree.prototype.getChildDirIndexByName = function (dirName){
 		var retIndex = -1;
 
 		for (var index = 0; index < this.childDirs.length; index++){
@@ -132,7 +197,7 @@ define (function (require, exports){
 	/**
 	 *
 	 **/
-	TreeNode.prototype.getChildFileIndexByName = function (fileName){
+	Tree.prototype.getChildFileIndexByName = function (fileName){
 		var retIndex = -1;
 
 		for (var index = 0; index < this.childFiles.length; index++){
@@ -148,7 +213,7 @@ define (function (require, exports){
 	/**
 	 * Search and return the node that contain the input id
 	 **/
-	TreeNode.prototype.getNodeById = function(id){
+	Tree.prototype.getNodeById = function(id){
 		var rootNode = this.getRootNode();
 		var retNode = rootNode.nodeInventory[id];
 
@@ -159,7 +224,7 @@ define (function (require, exports){
 	 *
 	 **/
 
-	TreeNode.prototype.getNodeByHtmlId = function(htmlId){
+	Tree.prototype.getNodeByHtmlId = function(htmlId){
 		var template = this.getRootNode().htmlId + '-node';
 		var nodeId = htmlId.replace(template, '');
 
@@ -169,8 +234,8 @@ define (function (require, exports){
 	/**
 	 *
 	 **/
-	TreeNode.prototype.getChildren = function(){
-		Logger.consoleDebug('TreeNode.getChildren()');
+	Tree.prototype.getChildren = function(){
+		Logger.consoleDebug('Tree.getChildren()');
 		var children = [];
 
 		for (var dir = 0; dir < this.childDirs.length; dir++){
@@ -189,7 +254,7 @@ define (function (require, exports){
 	/**
 	 *
 	 **/
-	TreeNode.prototype.isNodeHtmlGenerated = function(){
+	Tree.prototype.isNodeHtmlGenerated = function(){
 		for (var dir in this.childDirs){
 			var childDir = this.childDirs[dir];
 			if (!childDir.hasOwnProperty('htmlId')){
@@ -210,7 +275,7 @@ define (function (require, exports){
 	/**
 	 *
 	 **/
-	TreeNode.prototype.getTotalFilesCount = function(){
+	Tree.prototype.getTotalFilesCount = function(){
 		var listNode = this.getRootNode().nodeInventory;
 		var retCount = 0;
 
@@ -226,7 +291,7 @@ define (function (require, exports){
 	/**
 	 *
 	 **/
-	TreeNode.prototype.getSelectedFileCount = function(){
+	Tree.prototype.getSelectedFileCount = function(){
 		var listNode = this.getRootNode().nodeInventory;
 		var retCount = 0;
 
@@ -244,7 +309,7 @@ define (function (require, exports){
 	 */
 
 	function newFileTree(rootDir){
-		var newTree = new TreeNode();
+		var newTree = new Tree();
 		newTree.objType = Globals.OBJECT_DIR_TREE_ID;
 		newTree.type = Globals.TREE_TYPE_ROOT;
 		newTree.rootDir = rootDir;
@@ -339,23 +404,23 @@ define (function (require, exports){
 	 * debugPrint function
 	 **/
 
-	function debugPrint(TreeNode){
-		if (Common.isSet(TreeNode)){
-			Logger.consoleDebug('id:     ' + TreeNode.id);
-			Logger.consoleDebug('type:   ' + TreeNode.type);
-			Logger.consoleDebug('level:  ' + TreeNode.level);
-			Logger.consoleDebug('name:   ' + TreeNode.name);
-			Logger.consoleDebug('parent: ' + TreeNode.parent);
-			Logger.consoleDebug('relativePath: ' + TreeNode.relativePath);
-			Logger.consoleDebug('isSelected: ' + TreeNode.isSelected);
+	function debugPrint(Tree){
+		if (Common.isSet(Tree)){
+			Logger.consoleDebug('id:     ' + Tree.id);
+			Logger.consoleDebug('type:   ' + Tree.type);
+			Logger.consoleDebug('level:  ' + Tree.level);
+			Logger.consoleDebug('name:   ' + Tree.name);
+			Logger.consoleDebug('parent: ' + Tree.parent);
+			Logger.consoleDebug('relativePath: ' + Tree.relativePath);
+			Logger.consoleDebug('isSelected: ' + Tree.isSelected);
 
-			for (var child = 0; child < TreeNode.childFiles; child++){
-				Logger.consoleDebug('childFile ' + child + ': ' + TreeNode.childFiles[child]);
+			for (var child = 0; child < Tree.childFiles; child++){
+				Logger.consoleDebug('childFile ' + child + ': ' + Tree.childFiles[child]);
 			}
 
-			for (var childDir = 0; childDir < TreeNode.childDirs.length; childDir++){
-				Logger.consoleDebug('childDir ' + childDir + ': ' + TreeNode.childDirs[childDir]);
-				debugPrint(TreeNode.childDirs[childDir]);
+			for (var childDir = 0; childDir < Tree.childDirs.length; childDir++){
+				Logger.consoleDebug('childDir ' + childDir + ': ' + Tree.childDirs[childDir]);
+				debugPrint(Tree.childDirs[childDir]);
 			}
 		}
 	}

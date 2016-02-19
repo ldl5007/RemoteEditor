@@ -179,6 +179,14 @@ define (function (require, exports){
 		return treeNode;
 	}
 
+	function validate(treeNode){
+		if (!Common.isSet(treeNode)){
+			return false;
+		}
+
+		return true;
+	}
+
 
 	function testing(){
 		var testNode = null;
@@ -208,6 +216,7 @@ define (function (require, exports){
 
 
 	exports.newTreeNode = newTreeNode;
+	exports.validate    = validate;
 	exports.testing     = testing;
 
 });
