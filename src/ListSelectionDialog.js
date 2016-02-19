@@ -8,7 +8,8 @@ define(function (require, exports){
 		Globals = require('./Globals');
 
 	// debug
-	var tree         = require("./tree");
+	var tree         = require("./Tree"),
+	    TreeNode     = require("./TreeNode");
 
 	exports.newDialog  = newDialog;
 
@@ -63,6 +64,9 @@ define(function (require, exports){
 		Logger.consoleDebug("ListSelectionDialog.addFilePath()");
 
 		this.treeData.addRelativePath(newPath, false);
+
+		this.treeData.addPath(newPath, false);
+		console.log(this.treeData._nodeInventory);
 	};
 
 
@@ -126,6 +130,13 @@ define(function (require, exports){
 		Logger.consoleDebug("ListSelectionDialog.navigateTo("+navPath+")");
 
 		// Check if navPath existed.
+		var navNode = this.treeData.getNodeByPath(navPath);
+		if (TreeNode.validate(navNode)){
+
+		}
+		else{
+			Logger.consoleDebug("Unable to navigate to " + navPath);
+		}
 
 
 	};

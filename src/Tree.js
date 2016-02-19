@@ -129,9 +129,6 @@ define (function (require, exports){
 			return false;
 		}
 
-		this.addPath(filePath, isSelected);
-		console.log(this._rootNode);
-
 		var currPath = '';
 
 		// parse the input path into an array of directories
