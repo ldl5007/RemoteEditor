@@ -1,6 +1,8 @@
 define( function (require, exports, module){
 	"use strict";
 
+
+
 	var ExtensionUtils = brackets.getModule("utils/ExtensionUtils"),
 		NodeDomain     = brackets.getModule("utils/NodeDomain"),
 		FileUtils      = brackets.getModule("file/FileUtils"),
@@ -14,6 +16,8 @@ define( function (require, exports, module){
 		EventEmitter = require("src/EventEmitter"),
 		Events       = require("src/Events"),
 		FtpDomain    = new NodeDomain(DomainGlobal.WinFtp.domainName, ExtensionUtils.getModulePath(module, "../node/WinFtpDomain"));
+
+	var dummy = require("src/TreeNode");
 
 	var _currSite = null,
 		_currDialog = null,
@@ -29,6 +33,9 @@ define( function (require, exports, module){
 
 		if (response.code === 0){
 			if (response.scriptId == Events.FTP_CLIENT_CMD_LS){
+
+				console.log(response.stdout);
+
 				var lsOutputArr = parseLsCmdResponse(response.stdout);
 
 				console.log(lsOutputArr);
@@ -173,6 +180,9 @@ define( function (require, exports, module){
 	 **/
 	EventEmitter.on(Events.FTP_CLIENT_CMD_LS, function (listDir) {
 		Logger.consoleDebug("FtpClient Event: " + Events.FTP_CLIENT_CMD_LS);
+
+		/* LDL5007 Testing block */
+		dummy.testing();
 
 		var cmdArr = [];
 		cmdArr.push("CD " + listDir);

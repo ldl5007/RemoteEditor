@@ -320,86 +320,6 @@ define (function (require, exports){
 		return newTree;
 	}
 
-
-	/**
-	 *
-	 **/
-
-	function generateHtmlTreeContainer(treeNode, treeDiv){
-		Logger.consoleDebug("Tree.generateHtmlTreeContainer()");
-		var tableId = treeDiv + '-tree';
-
-		var html = '<table id="' + tableId + '" class="table table-striped table-bordered">';
-		html += "</table>";
-
-		treeNode.htmlId = tableId;
-
-		return html;
-	}
-
-	/**
-	 *
-	 **/
-
-	function generateHtmlTreeNode(treeNode){
-		Logger.consoleDebug('Tree.generateHtmlTreeNode()');
-
-		var nodeId, currNode;
-		var html = '';
-
-		// Generate node for directories
-		for (var dir = 0; dir < treeNode.childDirs.length; dir++){
-			currNode = treeNode.childDirs[dir];
-			nodeId = treeNode.getRootNode().htmlId + '-node' + currNode.id ;
-
-			html += '<tr id="' + nodeId + '" ';
-			html += 'data-depth="' + treeNode.level + '" class="expand collapsable level' + treeNode.level + '">';
-
-			html += '<td treeNode type="dir-node" data-depth="' + treeNode.level + '"><span class="toggle"></span>';
-			html += '<input type="checkbox" ';
-
-			if (currNode.isSelected){
-				html += 'checked';
-			}
-
-			html += '/>';
-
-			html += currNode.name + '</td>';
-
-			html += '</tr>';
-
-			currNode.htmlId = nodeId;
-		}
-
-		// Generate node for files
-		for (var file = 0; file < treeNode.childFiles.length; file++){
-			currNode = treeNode.childFiles[file];
-			nodeId = treeNode.getRootNode().htmlId + '-node' + currNode.id;
-
-			html += '<tr id="' + nodeId + '" ';
-			html += 'data-depth="' + treeNode.level + '" class="collapse level' + treeNode.level + '">';
-
-			html += '<td treeNode type="file-node" data-depth="' + treeNode.level + '">';
-			if (currNode.isSelectable){
-				html += '<input type="checkbox" ';
-
-				if (currNode.isSelected){
-					html += 'checked';
-				}
-
-				html += '/>';
-			}
-			html += currNode.name;
-			html += '<input type="hidden" value="' + currNode.relativePath + '"/>';
-			html += '</td>';
-			html += '</tr>';
-
-			currNode.htmlId = nodeId;
-		}
-
-		return html;
-	}
-
 	/**
 	 * debugPrint function
 	 **/
@@ -440,7 +360,5 @@ define (function (require, exports){
 
 	exports.newFileTree               = newFileTree;
 	exports.debugPrint                = debugPrint;
-	exports.generateHtmlTreeContainer = generateHtmlTreeContainer;
-	exports.generateHtmlTreeNode      = generateHtmlTreeNode;
 
 });
