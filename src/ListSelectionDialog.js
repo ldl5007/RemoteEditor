@@ -213,7 +213,6 @@ define(function (require, exports){
 			var el = $(this);
 			var tr = el.closest('tr'); //Get <tr> parent of toggle button
 			var trPath = tr.attr('path');
-			console.log(trPath);
 			var children = findChildren(tr);
 
 			//Remove already collapsed nodes from children so that we don't

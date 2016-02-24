@@ -17,11 +17,11 @@ define (function (require, exports){
 
 	Tree.prototype.isRowSelectable = function(){
 		return this._isRowSelectable;
-	}
+	};
 
 	Tree.prototype.setSeletable = function(isSelectable){
 		this._isRowSelectable = isSelectable;
-	}
+	};
 
 	Tree.prototype.generateId = function(){
 		var id = this._currentId;

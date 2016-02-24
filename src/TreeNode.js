@@ -62,17 +62,11 @@ define (function (require, exports){
 			}
 		}
 
-		dirList = dirList.sort(function (a,b) {return a.getName() < b.getName();});
-		fileList = fileList.sort(function (a,b) {return a.getName() < b.getName();});
-
-		console.log(dirList);
-		console.log(fileList);
+		dirList = dirList.sort(function (a,b) {return a.getName() > b.getName();});
+		fileList = fileList.sort(function (a,b) {return a.getName() > b.getName();});
 
 		retList = dirList.concat(fileList);
 
-		for (var child = 0; child < this._children.length; child++){
-			console.log(retList[child].getName());
-		}
 		return retList;
 	};
 
