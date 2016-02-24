@@ -2,14 +2,18 @@ define(function (require, exports){
 	"use strict";
 
 	var Dialogs = brackets.getModule("widgets/Dialogs");
-	var Strings = require("../strings"),
-		Logger  = require("./Logger"),
-		Common  = require("./Common"),
-		Globals = require('./Globals');
+	var Strings      = require("../strings"),
+		Logger       = require("./Logger"),
+		Common       = require("./Common"),
+		Globals      = require('./Globals');
 
 	// debug
-	var tree         = require("./Tree"),
+	var Tree         = require("./Tree"),
 	    TreeNode     = require("./TreeNode");
+
+	var TREE_DIV_ID   = "list-table",
+		TREE_TABLE_ID = TREE_DIV_ID + '-tree',
+		CURR_PATH_ID  = "#dir-text";
 
 	exports.newDialog  = newDialog;
 
@@ -24,7 +28,7 @@ define(function (require, exports){
 
 		Logger.consoleDebug(this.listTitle);
 
-		this.treeData = tree.newFileTree('ListSelectionDialog');
+		this.treeData = Tree.newFileTree('ListSelectionDialog');
 
 		for (var i = 0; i < inputList.length; i++){
 			this.treeData.addRelativePath(inputList[i], false);
@@ -43,13 +47,14 @@ define(function (require, exports){
 
 			this.dialog = Dialogs.showModalDialogUsingTemplate(compiledTemplate);
 			this.$dialog = this.dialog.getElement();
+			this.$listTable  = $('#' + TREE_DIV_ID, this.$dialog);
 
-			this.setTableTitle(this.listTitle);
+			this.$dialog.on("change", CURR_PATH_ID, dirTextChangedHandler);
 
-			refreshTableData(this.treeData, this.$dialog);
+			//this.setTableTitle(this.listTitle);
 
-			this.$dialog
-				.on("change", "#dir-text", dirTextChangedHandler);
+//			refreshTableData(this.treeData, this.$dialog);
+
 
 		} else {
 			alert("dialog is already shown");
@@ -63,15 +68,12 @@ define(function (require, exports){
 	ListSelectionDialog.prototype.addFilePath = function(newPath){
 		Logger.consoleDebug("ListSelectionDialog.addFilePath()");
 
-		this.treeData.addRelativePath(newPath, false);
-
 		this.treeData.addPath(newPath, false);
-		console.log(this.treeData._nodeInventory);
 	};
 
 
 	/**
-	 *
+	 *  Todo: remove this method sometime later
 	 **/
 
 	ListSelectionDialog.prototype.setTableTitle = function(inputStr){
@@ -120,7 +122,7 @@ define(function (require, exports){
 	 **/
 	ListSelectionDialog.prototype.refresh = function(){
 		Logger.consoleDebug("ListSelectionDialog.refresh()");
-		refreshTableData(this.treeData, this.$dialog);
+		//refreshTableData(this.treeData, this.$dialog);
 	};
 
 	/**
@@ -133,12 +135,26 @@ define(function (require, exports){
 		var navNode = this.treeData.getNodeByPath(navPath);
 		if (TreeNode.validate(navNode)){
 
+			// If the navigate node is not a directory then move up to parent node
+			console.log(navNode);
+			if (!navNode.isDirectoryNode()){
+				navNode = navNode.getParent();
+			}
+
+			generateRowHtml(navNode, this.$dialog);
+			var children = navNode.getChildren();
+
+			for (var child = 0; child < children.length; child ++){
+				generateRowHtml(children[child], this.$dialog);
+			}
+
+			formatTreeNode(this.$dialog);
+
+			this.setTableTitle(navPath);
 		}
 		else{
 			Logger.consoleDebug("Unable to navigate to " + navPath);
 		}
-
-
 	};
 
 	/**
@@ -153,6 +169,34 @@ define(function (require, exports){
 		});
 
 	};
+
+
+	function generateRowHtml(treeNode, $dialog){
+		var htmlId = treeNode.getHtmlId();
+		var html   = '';
+
+		if (Common.isEmpty(htmlId)){
+			if (Common.isEmpty(treeNode.getParent())){
+				html = generateHtmlTreeContainer(TREE_TABLE_ID);
+				$('#' + TREE_DIV_ID, $dialog).html(html);
+
+				html = generateHtmlTreeNode(treeNode);
+				$('#' + TREE_TABLE_ID, $dialog).html(html);
+				htmlId = treeNode.getHtmlId();
+			}
+			else {
+				htmlId = generateRowHtml(treeNode.getParent());
+
+				html = generateHtmlTreeNode(treeNode);
+				$('#' + htmlId, $dialog).after(html);
+				htmlId = treeNode.getHtmlId();
+			}
+
+		}
+
+		return htmlId;
+	}
+
 
 	/**
 	 *
@@ -206,7 +250,7 @@ define(function (require, exports){
 	 *
 	 **/
 
-	function formatTreeNode(treeNode, $dialog){
+	function formatTreeNode($dialog){
 		$("*[treeNode]", $dialog).each(function(){
 			var $this = $(this),
 				type  = $this.attr("type"),
@@ -344,14 +388,11 @@ define(function (require, exports){
 	 *
 	 **/
 
-	function generateHtmlTreeContainer(treeNode, treeDiv){
-		Logger.consoleDebug("ListSelectionDialog.generateHtmlTreeContainer()");
-		var tableId = treeDiv + '-tree';
+	function generateHtmlTreeContainer(treeId){
+		Logger.consoleDebug("ListSelectionDialog.generateHtmlTreeContainer("+treeId+")");
 
-		var html = '<table id="' + tableId + '" class="table table-striped table-bordered">';
+		var html = '<table id="' + treeId + '" class="table table-striped table-bordered">';
 		html += "</table>";
-
-		treeNode.htmlId = tableId;
 
 		return html;
 	}
@@ -363,63 +404,40 @@ define(function (require, exports){
 	function generateHtmlTreeNode(treeNode){
 		Logger.consoleDebug('ListSelectionDialog.generateHtmlTreeNode()');
 
-		var nodeId, currNode;
 		var html = '';
+		var nodeId = TREE_TABLE_ID + '-' + treeNode.getId();
+		treeNode.setHtmlId(nodeId);
 
-		// Generate node for directories
-		for (var dir = 0; dir < treeNode.childDirs.length; dir++){
-			currNode = treeNode.childDirs[dir];
-			nodeId = treeNode.getRootNode().htmlId + '-node' + currNode.id ;
+		html += '<tr id="' + treeNode.getHtmlId() + '" ';
+		html += 'data-depth="' + treeNode.getLevel() + '" ';
+		html += 'class="expand collapsable level' + treeNode.getLevel() + '" ';
+		html += 'path="' + treeNode.getPath() +  '" ';
+		html += '>';
 
-			html += '<tr id="' + nodeId + '" ';
-			html += 'data-depth="' + treeNode.level + '" class="expand collapsable level' + treeNode.level + '">';
+		html += '<td treeNode ';
+		if (treeNode.isDirectoryNode()){
+			html += 'type="dir-node" data-depth="' + treeNode.getLevel() + '"><span class="toggle"></span>';
+		}
+		else {
+			html += 'type="file-node" data-depth="' + treeNode.getLevel() + '">';
+		}
 
-			html += '<td treeNode type="dir-node" data-depth="' + treeNode.level + '"><span class="toggle"></span>';
+		if (treeNode.isSelectable()){
 			html += '<input type="checkbox" ';
 
-			if (currNode.isSelected){
+			if (treeNode.isSelected()){
 				html += 'checked';
 			}
 
 			html += '/>';
-
-			html += currNode.name + '</td>';
-
-			html += '</tr>';
-
-			currNode.htmlId = nodeId;
 		}
 
-		// Generate node for files
-		for (var file = 0; file < treeNode.childFiles.length; file++){
-			currNode = treeNode.childFiles[file];
-			nodeId = treeNode.getRootNode().htmlId + '-node' + currNode.id;
+		html += treeNode.getName() + '</td>';
 
-			html += '<tr id="' + nodeId + '" ';
-			html += 'data-depth="' + treeNode.level + '" class="collapse level' + treeNode.level + '">';
-
-			html += '<td treeNode type="file-node" data-depth="' + treeNode.level + '">';
-			if (currNode.isSelectable){
-				html += '<input type="checkbox" ';
-
-				if (currNode.isSelected){
-					html += 'checked';
-				}
-
-				html += '/>';
-			}
-			html += currNode.name;
-			html += '<input type="hidden" value="' + currNode.relativePath + '"/>';
-			html += '</td>';
-			html += '</tr>';
-
-			currNode.htmlId = nodeId;
-		}
+		html += '</tr>';
 
 		return html;
 	}
-
-
 
 	function newDialog(inputList, listTitle){
 		return new ListSelectionDialog(inputList, listTitle);

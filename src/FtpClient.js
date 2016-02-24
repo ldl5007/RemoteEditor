@@ -44,7 +44,8 @@ define( function (require, exports, module){
 					_currDialog.addFilePath(lsOutputArr[index]);
 				}
 
-				_currDialog.refresh();
+				//	_currDialog.refresh();
+				_currDialog.navigateTo('/a/lyzla01/');
 			}
 		}
 

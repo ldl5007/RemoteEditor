@@ -7,22 +7,20 @@ define (function (require, exports){
 		Logger    = require("src/Logger"),
 		TreeNode  = require("src/TreeNode");
 
-	var nodeId = 0;
-
 	function Tree(name){
-		this.parent     = null;
-		this.id         = newNodeId();
-		this.name       = name || '';
-		this.level      = 0;
-		this.childDirs  = [];
-		this.childFiles = [];
-
-		this.isSelected = false;
-		this.isSelectable = true;
-
+		this._name = name;
 		this._rootNode = null;
 		this._nodeInventory = [];
 		this._currentId = 0;
+		this._isRowSelectable = true;
+	}
+
+	Tree.prototype.isRowSelectable = function(){
+		return this._isRowSelectable;
+	}
+
+	Tree.prototype.setSeletable = function(isSelectable){
+		this._isRowSelectable = isSelectable;
 	}
 
 	Tree.prototype.generateId = function(){
@@ -53,42 +51,20 @@ define (function (require, exports){
 	};
 
 	/**
-	 * Add child directory node to the current node
+	 *
 	 **/
-	Tree.prototype.addChildDir = function(dirName, relativePath, isSelected){
-		Logger.consoleDebug("Tree.prototype.addChildDir("+dirName+")");
-		if (this.getChildDirIndexByName(dirName) === -1){
-			var newNode = new Tree(dirName);
-			newNode.parent = this;
-			newNode.type   = Globals.TREE_TYPE_DIR;
-			newNode.level  = this.level + 1;
+	Tree.prototype.isDirectoryNode = function(treeNode){
+		var returnStatus = false;
 
-			newNode.relativePath = relativePath;
-			newNode.isSelected = isSelected;
+		if (TreeNode.validate(treeNode)){
+			var path = treeNode.getPath();
 
-			this.childDirs.push(newNode);
-			registerTreeNode(newNode);
+			if (path.endsWith('/')){
+				returnStatus = true;
+			}
 		}
-	};
 
-	/**
-	 * Add child file node to the current node
-	 **/
-	Tree.prototype.addChildFiles = function(fileName, relativePath, isSelected){
-		Logger.consoleDebug("Tree.prototype.addChildFile("+fileName+")");
-		// Validate imput
-		if (this.getChildFileIndexByName(fileName) === -1){
-			var newNode = new Tree(fileName);
-			newNode.parent = this;
-			newNode.type   = Globals.TREE_TYPE_FILE;
-			newNode.level  = this.level + 1;
-
-			newNode.relativePath = relativePath;
-			newNode.isSelected   = isSelected;
-
-			this.childFiles.push(newNode);
-			registerTreeNode(newNode);
-		}
+		return returnStatus;
 	};
 
 	Tree.prototype.addPath = function(filePath, isSelected){
@@ -100,11 +76,11 @@ define (function (require, exports){
 			console.log(name);
 			name     = FileUtils.getBaseName(name);
 			console.log(name);
-			newNode = TreeNode.newTreeNode(name, filePath, this.generateId(), isSelected);
+			newNode = TreeNode.newTreeNode(name, filePath, this.generateId(), this.isRowSelectable(), isSelected);
 
 			var parentPath = FileUtils.getParentPath(filePath);
 			if (parentPath === '/' || parentPath === ''){
-				parentNode = TreeNode.newTreeNode(parentPath, parentPath, this.generateId(), isSelected);
+				parentNode = TreeNode.newTreeNode(parentPath, parentPath, this.generateId(), this.isRowSelectable(), isSelected);
 				this.registerTreeNode(parentNode);
 				this._rootNode = parentNode;
 			}
@@ -117,50 +93,6 @@ define (function (require, exports){
 		}
 
 		return newNode;
-	};
-
-	/**
-	 * Build the tree relative path from the root.
-	 **/
-
-	Tree.prototype.addRelativePath = function(filePath, isSelected){
-		Logger.consoleDebug('Tree.addRelativePath(' + filePath + ')');
-		if (typeof filePath !== 'string'){
-			return false;
-		}
-
-		var currPath = '';
-
-		// parse the input path into an array of directories
-		filePath = FileUtils.convertWindowsPathToUnixPath(filePath);
-		var listDir = filePath.split('/');
-		var currNode = this.getRootNode();
-		var nodeName = '';
-
-		Logger.consoleDebug(listDir);
-
-		// Loop through and build the tree
-		for (var i = 0; i < listDir.length - 1; i++){
-			nodeName = listDir[i];
-			if (nodeName === ''){
-				nodeName = '/';
-			}
-
-			if (currPath === ''){
-				currPath = listDir[i];
-			} else {
-				currPath += currPath + '/' + listDir[i];
-			}
-			currNode.addChildDir(nodeName, currPath, isSelected);
-
-			currNode = currNode.childDirs[currNode.getChildDirIndexByName(nodeName)];
-		}
-
-		var fileName = listDir[listDir.length - 1];
-		if (fileName !== ''){
-			// The last element of the array is always the file.
-			currNode.addChildFiles(listDir[listDir.length - 1], filePath, isSelected);
-		}
 	};
 
 	/**
@@ -312,7 +244,6 @@ define (function (require, exports){
 		newTree.rootDir = rootDir;
 
 		newTree.nodeInventory = [];
-		registerTreeNode(newTree);
 
 		return newTree;
 	}
@@ -340,19 +271,6 @@ define (function (require, exports){
 				debugPrint(Tree.childDirs[childDir]);
 			}
 		}
-	}
-
-	function registerTreeNode(node){
-		Logger.consoleDebug("Tree.registerTreeNode("+node.name+")");
-		var rootNode = node.getRootNode();
-		rootNode.nodeInventory[node.id] = node;
-	}
-
-	function newNodeId(){
-		var returnId = nodeId;
-		nodeId++;
-
-		return returnId;
 	}
 
 	exports.newFileTree               = newFileTree;

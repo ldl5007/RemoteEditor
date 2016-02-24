@@ -1,11 +1,12 @@
 define (function (require, exports){
 	"use strict";
 
-	var Common = require("src/Common"),
+	var StringUtils = brackets.getModule("utils/StringUtils"),
+		Common = require("src/Common"),
 		Globals = require("src/Globals"),
 		Logger  = require("src/Logger");
 
-	function TreeNode(name, path, id, selectable){
+	function TreeNode(name, path, id, isSelectable, isSelected){
 
 		this._objType = Globals.OBJECT_ID_TREE_NODE;
 		this._parent = null;
@@ -13,10 +14,11 @@ define (function (require, exports){
 		this._id     = id;
 		this._path   = path;
 		this._level  = 0;
+		this._htmlId = null;
 		this._children = [];
 
-		this._isSelectable = selectable;
-		this._isSelected  = false;
+		this._isSelectable = isSelectable;
+		this._isSelected  = isSelected;
 	}
 
 	/**
@@ -42,8 +44,36 @@ define (function (require, exports){
 		return this._level;
 	};
 
+	TreeNode.prototype.getHtmlId = function(){
+		return this._htmlId;
+	};
+
 	TreeNode.prototype.getChildren = function(){
-		return this._children;
+		var dirList = [];
+		var fileList = [];
+		var retList  = [];
+
+		for (var child = 0; child < this._children.length; child++){
+			if (this._children[child].isDirectoryNode()){
+				dirList.push(this._children[child]);
+			}
+			else {
+				fileList.push(this._children[child]);
+			}
+		}
+
+		dirList = dirList.sort(function (a,b) {return a.getName() < b.getName();});
+		fileList = fileList.sort(function (a,b) {return a.getName() < b.getName();});
+
+		console.log(dirList);
+		console.log(fileList);
+
+		retList = dirList.concat(fileList);
+
+		for (var child = 0; child < this._children.length; child++){
+			console.log(retList[child].getName());
+		}
+		return retList;
 	};
 
 	TreeNode.prototype.isSelectable = function(){
@@ -72,6 +102,10 @@ define (function (require, exports){
 
 	TreeNode.prototype.setLevel = function(level){
 		this._level = level;
+	};
+
+	TreeNode.prototype.setHtmlId = function(htmlId){
+		this._htmlId = htmlId;
 	};
 
 	TreeNode.prototype.setSeletable = function(selectable){
@@ -152,6 +186,19 @@ define (function (require, exports){
 		return children;
 	};
 
+	/**
+	 *
+	 **/
+	TreeNode.prototype.isDirectoryNode = function(){
+		var returnStatus = false;
+
+		if (StringUtils.endsWith(this.getPath(), '/')){
+			returnStatus = true;
+		}
+
+		return returnStatus;
+	};
+
 	TreeNode.prototype.debugPrint = function(){
 		Logger.consoleDebug("TreeNode.debugPrint()");
 		Logger.consoleDebug('parent:    ' + this.getParent());
@@ -159,6 +206,7 @@ define (function (require, exports){
 		Logger.consoleDebug('id:        ' + this.getId());
 		Logger.consoleDebug('path:      ' + this.getPath());
 		Logger.consoleDebug('level:     ' + this.getLevel());
+		Logger.consoleDebug('htmlId:    ' + this.getHtmlId());
 		Logger.consoleDebug('isSelectable:' + this.isSelectable());
 		Logger.consoleDebug('isSeleted:   ' + this.isSelected());
 
@@ -170,10 +218,10 @@ define (function (require, exports){
 	};
 
 
-	function newTreeNode(name, path, id, selectable){
+	function newTreeNode(name, path, id, isSelectable, isSelected){
 		var treeNode = null;
 
-		treeNode = new TreeNode(name, path, id, selectable);
+		treeNode = new TreeNode(name, path, id, isSelectable, isSelected);
 		Object.seal(treeNode);
 
 		return treeNode;
