@@ -1,7 +1,8 @@
 define(function (require, exports){
 	"use strict";
 
-	var Dialogs = brackets.getModule("widgets/Dialogs");
+	var Dialogs   = brackets.getModule("widgets/Dialogs"),
+	    FileUtils = brackets.getModule("file/FileUtils");
 	var Strings      = require("../strings"),
 		Logger       = require("./Logger"),
 		Common       = require("./Common"),
@@ -78,6 +79,7 @@ define(function (require, exports){
 
 	ListSelectionDialog.prototype.setTableTitle = function(inputStr){
 		Logger.consoleDebug('ListSelectionDialog.setTableTitle('+inputStr+')');
+		inputStr = FileUtils.stripTrailingSlash(inputStr);
 		$('#dir-text', this.$dialog).val(inputStr);
 	};
 
@@ -144,17 +146,138 @@ define(function (require, exports){
 			generateRowHtml(navNode, this.$dialog);
 			var children = navNode.getChildren();
 
-			for (var child = 0; child < children.length; child ++){
-				generateRowHtml(children[child], this.$dialog);
+			while (children.length > 0){
+				generateRowHtml(children.pop(), this.$dialog);
 			}
 
-			formatTreeNode(this.$dialog);
+			this.formatTreeNode();
+			this.setTreeNodeToggleHandler(this.treeData);
+			this.setTreeNodeCheckHandler(this.treeData, this.$dialog);
 
 			this.setTableTitle(navPath);
 		}
 		else{
 			Logger.consoleDebug("Unable to navigate to " + navPath);
 		}
+	};
+
+	/**
+	 *
+	 **/
+
+	ListSelectionDialog.prototype.formatTreeNode = function(){
+		$(".newNode", this.$dialog).each(function(){
+			var $this = $(this),
+				type  = $this.attr("type"),
+				level = $this.attr("data-depth");
+
+			var padSize = 0;
+
+			var basePadding = $("#list-selection-dialog .level1").css('padding-left');
+			if (Common.isSet(basePadding)){
+				padSize = Number(basePadding.replace('px','')) * Number(level);
+			}
+
+			if (type === 'dir-node'){
+				$this.css("padding-left", padSize.toString() + "px");
+			} else if (type === 'file-node'){
+				var toggleSize = $("#list-selection-dialog .toggle").css('width');
+				var togglePad  = $("#list-selection-dialog .toggle").css('padding-right');
+
+				if (Common.isSet(toggleSize) && Common.isSet(togglePad)){
+					padSize += Number(toggleSize.replace('px','')) + Number(togglePad.replace('px',''));
+				}
+
+				$this.css("padding-left", padSize.toString() + "px");
+			}
+
+			$this.removeClass("newNode");
+		});
+	};
+
+	/*
+	 *
+	 */
+
+	ListSelectionDialog.prototype.setTreeNodeToggleHandler = function(treeData){
+		this.$dialog.on('click', '.toggle', function() {
+
+			// Get all <tr>'s of the greater depth
+			var findChildren = function (tr) {
+				var depth = tr.data('depth');
+				return tr.nextUntil($('tr').filter(function () {
+					return $(this).data('depth') <= depth;
+				}));
+			};
+
+			var el = $(this);
+			var tr = el.closest('tr'); //Get <tr> parent of toggle button
+			var trPath = tr.attr('path');
+			console.log(trPath);
+			var children = findChildren(tr);
+
+			//Remove already collapsed nodes from children so that we don't
+			//make them visible.
+			//(Confused? Remove this code and close Item 2, close Item 1
+			//then open Item 1 again, then you will understand)
+			var subnodes = children.filter('.expand');
+			subnodes.each(function () {
+				var subnode = $(this);
+				var subnodeChildren = findChildren(subnode);
+				children = children.not(subnodeChildren);
+			});
+
+			//Change icon and hide/show children
+			if (tr.hasClass('collapse')) {
+				tr.removeClass('collapse').addClass('expand');
+				children.hide();
+			} else {
+				tr.removeClass('expand').addClass('collapse');
+				// if the html is not generated then will have to generate and append to the list
+				var node = treeData.getNodeByPath(trPath);
+
+				if (Common.isSet(node.getHtmlId())){
+					children.show();
+				} else {
+					generateRowHtml(node, this.$dialog);
+					this.formatTreeNode();
+					this.setTreeNodeToggleHandler();
+				}
+			}
+
+			return children;
+		});
+	};
+
+	/**
+	 *
+	 **/
+
+	ListSelectionDialog.prototype.setTreeNodeCheckHandler = function(treeData, $dialog){
+		this.$dialog.on('click', 'input:checkbox', function () {
+
+			// Get all <tr>'s of the greater depth
+			var el = $(this);
+			var tr = el.closest('tr'); //Get <tr> parent of toggle button
+			var trPath = tr.attr('path');
+
+			var checked = el.is(':checked');
+
+			var node = treeData.getNodeByPath(trPath);
+			node.setSelected(checked);
+
+			var children = node.getAllChildren();
+			for (var index = 0; index < children.length; index++){
+				var child = children[index];
+
+				child.setSelected(checked);
+				if (Common.isSet(child.getHtmlId())){
+					$('#' + child.getHtmlId() + ' input:checkbox', $dialog).prop('checked', checked);
+				}
+			}
+
+			updateSelectedFileCount(treeData, $dialog);
+		});
 	};
 
 	/**
@@ -209,34 +332,6 @@ define(function (require, exports){
 	/**
 	 *
 	 **/
-
-	function refreshTableData(treeNode, $dialog){
-		Logger.consoleDebug('ListSelectionDialog.refreshTableData()');
-		var $this = $('#list-table', $dialog);
-		var id    = $this.attr("id");
-
-		if (treeNode.type === Globals.TREE_TYPE_ROOT){
-			var tableHtml = generateHtmlTreeContainer(treeNode, id);
-			Logger.consoleDebug(treeNode.htmlId);
-			$this.html(tableHtml, treeNode.divId);
-
-			var nodeHtml = generateHtmlTreeNode(treeNode);
-			$("#" + treeNode.htmlId, $dialog).html(nodeHtml);
-		}
-
-		formatTreeNode(treeNode, $dialog);
-
-		//Reset toggle listeners
-		resetTreeToggle(treeNode, $dialog);
-		resetTreeCheckbox(treeNode, $dialog);
-
-		updateSelectedFileCount(treeNode, $dialog);
-	}
-
-
-	/**
-	 *
-	 **/
 	function updateSelectedFileCount(treeNode, $dialog){
 		var selected = treeNode.getSelectedFileCount();
 		var total    = treeNode.getTotalFilesCount();
@@ -246,117 +341,7 @@ define(function (require, exports){
 		$('#dialog-status', $dialog).text(dispText);
 	}
 
-	/**
-	 *
-	 **/
 
-	function formatTreeNode($dialog){
-		$("*[treeNode]", $dialog).each(function(){
-			var $this = $(this),
-				type  = $this.attr("type"),
-				level = $this.attr("data-depth");
-
-			var padSize = 0;
-
-			var basePadding = $("#list-selection-dialog .level1").css('padding-left');
-			if (Common.isSet(basePadding)){
-				padSize = Number(basePadding.replace('px','')) * Number(level);
-			}
-
-			if (type === 'dir-node'){
-				$this.css("padding-left", padSize.toString() + "px");
-			} else if (type === 'file-node'){
-				var toggleSize = $("#list-selection-dialog .toggle").css('width');
-				var togglePad  = $("#list-selection-dialog .toggle").css('padding-right');
-
-				if (Common.isSet(toggleSize) && Common.isSet(togglePad)){
-					padSize += Number(toggleSize.replace('px','')) + Number(togglePad.replace('px',''));
-				}
-
-				$this.css("padding-left", padSize.toString() + "px");
-			}
-		});
-	}
-
-	/*
-	 *
-	 */
-
-	function resetTreeToggle(treeNode, $dialog){
-		$("#" + treeNode.htmlId, $dialog).on('click', '.toggle', function () {
-
-			// Get all <tr>'s of the greater depth
-			var findChildren = function (tr) {
-				var depth = tr.data('depth');
-				return tr.nextUntil($('tr').filter(function () {
-					return $(this).data('depth') <= depth;
-				}));
-			};
-
-			var el = $(this);
-			var tr = el.closest('tr'); //Get <tr> parent of toggle button
-			var trId = tr.attr('id');
-			var children = findChildren(tr);
-
-			//Remove already collapsed nodes from children so that we don't
-			//make them visible.
-			//(Confused? Remove this code and close Item 2, close Item 1
-			//then open Item 1 again, then you will understand)
-			var subnodes = children.filter('.expand');
-			subnodes.each(function () {
-				var subnode = $(this);
-				var subnodeChildren = findChildren(subnode);
-				children = children.not(subnodeChildren);
-			});
-
-			//Change icon and hide/show children
-			if (tr.hasClass('collapse')) {
-				tr.removeClass('collapse').addClass('expand');
-				children.hide();
-			} else {
-				tr.removeClass('expand').addClass('collapse');
-				// if the html is not generated then will have to generate and append to the list
-				var node = treeNode.getNodeByHtmlId(trId);
-
-				if (node.isNodeHtmlGenerated()){
-					children.show();
-				} else {
-					var nodeHtml = generateHtmlTreeNode(node);
-					tr.after(nodeHtml);
-					formatTreeNode(node, $dialog);
-				}
-			}
-
-			return children;
-		});
-	}
-
-	function resetTreeCheckbox(treeNode, $dialog){
-		$("#" + treeNode.htmlId, $dialog).on('click', 'input:checkbox', function () {
-
-			// Get all <tr>'s of the greater depth
-			var el = $(this);
-			var tr = el.closest('tr'); //Get <tr> parent of toggle button
-			var trId = tr.attr('id');
-
-			var checked = el.is(':checked');
-
-			var node = treeNode.getNodeByHtmlId(trId);
-			node.isSelected = checked;
-
-			var children = node.getChildren();
-			for (var index in children){
-				var child = children[index];
-
-				child.isSelected = checked;
-				if (child.hasOwnProperty('htmlId')){
-					$('#' + child.htmlId + ' input:checkbox', $dialog).prop('checked', checked);
-				}
-			}
-
-			updateSelectedFileCount(treeNode, $dialog);
-		});
-	}
 
 	/*
 	 * Collapse the entire tree
@@ -391,8 +376,8 @@ define(function (require, exports){
 	function generateHtmlTreeContainer(treeId){
 		Logger.consoleDebug("ListSelectionDialog.generateHtmlTreeContainer("+treeId+")");
 
-		var html = '<table id="' + treeId + '" class="table table-striped table-bordered">';
-		html += "</table>";
+		var html = '<table id="' + treeId + '" class="table table-striped table-bordered">' +
+		           '</table>';
 
 		return html;
 	}
@@ -408,13 +393,13 @@ define(function (require, exports){
 		var nodeId = TREE_TABLE_ID + '-' + treeNode.getId();
 		treeNode.setHtmlId(nodeId);
 
-		html += '<tr id="' + treeNode.getHtmlId() + '" ';
-		html += 'data-depth="' + treeNode.getLevel() + '" ';
-		html += 'class="expand collapsable level' + treeNode.getLevel() + '" ';
-		html += 'path="' + treeNode.getPath() +  '" ';
-		html += '>';
+		html += '<tr id="' + treeNode.getHtmlId() + '" ' +
+		        'data-depth="' + treeNode.getLevel() + '" ' +
+		        'class="expand collapsable level' + treeNode.getLevel() + '" ' +
+		        'path="' + treeNode.getPath() +  '" ' +
+		        '>';
 
-		html += '<td treeNode ';
+		html += '<td treeNode class="newNode"';
 		if (treeNode.isDirectoryNode()){
 			html += 'type="dir-node" data-depth="' + treeNode.getLevel() + '"><span class="toggle"></span>';
 		}
