@@ -151,8 +151,8 @@ define(function (require, exports){
 			}
 
 			this.formatTreeNode();
-			this.setTreeNodeToggleHandler(this.treeData);
-			this.setTreeNodeCheckHandler(this.treeData, this.$dialog);
+			this.setTreeNodeToggleHandler();
+			this.setTreeNodeCheckHandler();
 
 			this.setTableTitle(navPath);
 		}
@@ -199,7 +199,8 @@ define(function (require, exports){
 	 *
 	 */
 
-	ListSelectionDialog.prototype.setTreeNodeToggleHandler = function(treeData){
+	ListSelectionDialog.prototype.setTreeNodeToggleHandler = function(){
+		var that = this;
 		this.$dialog.on('click', '.toggle', function() {
 
 			// Get all <tr>'s of the greater depth
@@ -233,7 +234,7 @@ define(function (require, exports){
 			} else {
 				tr.removeClass('expand').addClass('collapse');
 				// if the html is not generated then will have to generate and append to the list
-				var node = treeData.getNodeByPath(trPath);
+				var node = that.treeData.getNodeByPath(trPath);
 
 				if (Common.isSet(node.getHtmlId())){
 					children.show();
@@ -252,7 +253,8 @@ define(function (require, exports){
 	 *
 	 **/
 
-	ListSelectionDialog.prototype.setTreeNodeCheckHandler = function(treeData, $dialog){
+	ListSelectionDialog.prototype.setTreeNodeCheckHandler = function(){
+		var that = this;
 		this.$dialog.on('click', 'input:checkbox', function () {
 
 			// Get all <tr>'s of the greater depth
@@ -262,7 +264,7 @@ define(function (require, exports){
 
 			var checked = el.is(':checked');
 
-			var node = treeData.getNodeByPath(trPath);
+			var node = that.treeData.getNodeByPath(trPath);
 			node.setSelected(checked);
 
 			var children = node.getAllChildren();
@@ -271,11 +273,11 @@ define(function (require, exports){
 
 				child.setSelected(checked);
 				if (Common.isSet(child.getHtmlId())){
-					$('#' + child.getHtmlId() + ' input:checkbox', $dialog).prop('checked', checked);
+					$('#' + child.getHtmlId() + ' input:checkbox', that.$dialog).prop('checked', checked);
 				}
 			}
 
-			updateSelectedFileCount(treeData, $dialog);
+			updateSelectedFileCount(that.treeData, that.$dialog);
 		});
 	};
 
@@ -313,6 +315,8 @@ define(function (require, exports){
 				$('#' + htmlId, $dialog).after(html);
 				htmlId = treeNode.getHtmlId();
 			}
+
+			console.log(html);
 
 		}
 
@@ -395,8 +399,7 @@ define(function (require, exports){
 		html += '<tr id="' + treeNode.getHtmlId() + '" ' +
 		        'data-depth="' + treeNode.getLevel() + '" ' +
 		        'class="expand collapsable level' + treeNode.getLevel() + '" ' +
-		        'path="' + treeNode.getPath() +  '" ' +
-		        '>';
+		        'path="' + treeNode.getPath() + '">';
 
 		html += '<td treeNode class="newNode"';
 		if (treeNode.isDirectoryNode()){

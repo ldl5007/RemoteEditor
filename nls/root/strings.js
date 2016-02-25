@@ -32,6 +32,7 @@ define({
 	LOADING: "Loading\u2026",
 	ADD_FILE: "Add File",
 	REMOVE_FILE: "Remove File",
+	SELECTED: "File Selected",
 
 	DIALOG_TITLE_LIST_SELECTION: "List Selection Dialog",
 	DIALOG_TITLE_ADD_SITE:       "Add FTP Site",

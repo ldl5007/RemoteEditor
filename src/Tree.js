@@ -1,7 +1,7 @@
 define (function (require, exports){
 	"use strict";
 
-	var FileUtils = brackets.getModule("file/FileUtils"),
+	var FileUtils   = brackets.getModule("file/FileUtils"),
 		Common    = require("src/Common"),
 		Globals   = require("src/Globals"),
 		Logger    = require("src/Logger"),
@@ -47,6 +47,7 @@ define (function (require, exports){
 	 *
 	 **/
 	Tree.prototype.getNodeByPath = function(path){
+		Logger.consoleDebug("Tree.getNodeByPath("+path+")");
 		return this._nodeInventory[path];
 	};
 
@@ -72,6 +73,7 @@ define (function (require, exports){
 		var newNode = this.getNodeByPath(filePath);
 		var parentNode = null;
 		if (!Common.isSet(newNode)){
+			filePath = filePath.trim();
 			var name = FileUtils.stripTrailingSlash(filePath);
 			console.log(name);
 			name     = FileUtils.getBaseName(name);
@@ -205,12 +207,11 @@ define (function (require, exports){
 	 *
 	 **/
 	Tree.prototype.getTotalFilesCount = function(){
-		var listNode = this.getRootNode().nodeInventory;
 		var retCount = 0;
 
-		for (var index in listNode){
-			if (listNode[index].type === Globals.TREE_TYPE_FILE){
-				retCount++;
+		for (var index in this._nodeInventory){
+			if (!this._nodeInventory[index].isDirectoryNode()){
+				retCount ++;
 			}
 		}
 
@@ -221,12 +222,13 @@ define (function (require, exports){
 	 *
 	 **/
 	Tree.prototype.getSelectedFileCount = function(){
-		var listNode = this.getRootNode().nodeInventory;
 		var retCount = 0;
 
-		for (var index in listNode){
-			if (listNode[index].type === Globals.TREE_TYPE_FILE && listNode[index].isSelected){
-				retCount++;
+		for (var index in this._nodeInventory){
+			if (!this._nodeInventory[index].isDirectoryNode()){
+				if (this._nodeInventory[index].isSelected()){
+					retCount ++;
+				}
 			}
 		}
 

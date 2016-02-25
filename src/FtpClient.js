@@ -133,6 +133,7 @@ define( function (require, exports, module){
 		var strArr = StringUtils.getLines(respStr);
 		while(strArr.length > 0){
 			newStr = strArr.splice(0, 1)[0];
+			newStr = newStr.replace(/(\r\n|\n|\r)/gm,"");
 
 			if (isCollecting){
 				lsOutputArr.push(newStr);
