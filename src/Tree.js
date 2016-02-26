@@ -101,13 +101,7 @@ define (function (require, exports){
 	 * Return root node
 	 **/
 	Tree.prototype.getRootNode = function(){
-		var currNode = this;
-
-		while(currNode.type !== Globals.TREE_TYPE_ROOT){
-			currNode = currNode.parent;
-		}
-
-		return currNode;
+		return this._rootNode;
 	};
 
 	/**

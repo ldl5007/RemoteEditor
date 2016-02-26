@@ -143,11 +143,11 @@ define(function (require, exports){
 				navNode = navNode.getParent();
 			}
 
-			generateRowHtml(navNode, this.$dialog);
+			generateRowHtml(navNode, this.$dialog, true);
 			var children = navNode.getChildren();
 
 			while (children.length > 0){
-				generateRowHtml(children.pop(), this.$dialog);
+				generateRowHtml(children.pop(), this.$dialog, false);
 			}
 
 			this.formatTreeNode();
@@ -229,9 +229,12 @@ define(function (require, exports){
 
 			//Change icon and hide/show children
 			if (tr.hasClass('collapse')) {
-				tr.removeClass('collapse').addClass('expand');
-				children.hide();
+				that.collapsePath(trPath);
+//				tr.removeClass('collapse').addClass('expand');
+//				children.hide();
 			} else {
+				that.expandPath(trPath);
+				/*
 				tr.removeClass('expand').addClass('collapse');
 				// if the html is not generated then will have to generate and append to the list
 				var node = that.treeData.getNodeByPath(trPath);
@@ -243,12 +246,58 @@ define(function (require, exports){
 					this.formatTreeNode();
 					this.setTreeNodeToggleHandler();
 				}
+				*/
 			}
 
 			return children;
 		});
 	};
 
+	ListSelectionDialog.prototype.collapsePath = function(path){
+		Logger.consoleDebug("ListSelectionDialog.collapsePath("+path+")");
+		var node = this.treeData.getNodeByPath(path);
+
+		if (TreeNode.validate(node) && Common.isSet(node.getHtmlId())){
+			$('#' + node.getHtmlId(), this.$dialog).removeClass('collapse').addClass('expand');
+			this.hideNode(node);
+		}
+	};
+
+	ListSelectionDialog.prototype.expandPath = function(path){
+		Logger.consoleDebug("ListSelectionDialog.expandPath("+path+")");
+
+		var node = this.treeData.getNodeByPath(path);
+		if (TreeNode.validate(node) && Common.isSet(node.getHtmlId())){
+			$('#' + node.getHtmlId(), this.$dialog).removeClass('expand').addClass('collapse');
+			this.showNode(node);
+		}
+	};
+
+	ListSelectionDialog.prototype.hideNode = function(treeNode){
+		if (Common.isSet(treeNode.getHtmlId())){
+			var children = treeNode.getAllChildren();
+			for (var index = 0; index < children.length; index++){
+				if (Common.isSet(children[index].getHtmlId())){
+					$('#' + children[index].getHtmlId(), this.$dialog).hide();
+				}
+			}
+		}
+	};
+
+
+	ListSelectionDialog.prototype.showNode = function(treeNode){
+		if (Common.isSet(treeNode.getHtmlId())){
+			if ($('#' + treeNode.getHtmlId(), this.$dialog).hasClass('collapse')){
+				var children = treeNode.getChildren();
+				for (var index = 0; index < children.length; index++){
+					if (Common.isSet(children[index].getHtmlId)){
+						$('#' + children[index].getHtmlId(), this.$dialog).show();
+						this.showNode(children[index]);
+					}
+				}
+			}
+		}
+	};
 	/**
 	 *
 	 **/
@@ -295,7 +344,7 @@ define(function (require, exports){
 	};
 
 
-	function generateRowHtml(treeNode, $dialog){
+	function generateRowHtml(treeNode, $dialog, isExpand){
 		var htmlId = treeNode.getHtmlId();
 		var html   = '';
 
@@ -304,19 +353,17 @@ define(function (require, exports){
 				html = generateHtmlTreeContainer(TREE_TABLE_ID);
 				$('#' + TREE_DIV_ID, $dialog).html(html);
 
-				html = generateHtmlTreeNode(treeNode);
+				html = generateHtmlTreeNode(treeNode, isExpand);
 				$('#' + TREE_TABLE_ID, $dialog).html(html);
 				htmlId = treeNode.getHtmlId();
 			}
 			else {
 				htmlId = generateRowHtml(treeNode.getParent());
 
-				html = generateHtmlTreeNode(treeNode);
+				html = generateHtmlTreeNode(treeNode, isExpand);
 				$('#' + htmlId, $dialog).after(html);
 				htmlId = treeNode.getHtmlId();
 			}
-
-			console.log(html);
 
 		}
 
@@ -389,16 +436,21 @@ define(function (require, exports){
 	 *
 	 **/
 
-	function generateHtmlTreeNode(treeNode){
+	function generateHtmlTreeNode(treeNode, isExpand){
 		Logger.consoleDebug('ListSelectionDialog.generateHtmlTreeNode()');
 
 		var html = '';
 		var nodeId = TREE_TABLE_ID + '-' + treeNode.getId();
+		var toggleFlag = "collapse";
+		if (isExpand){
+			toggleFlag = "expand";
+		}
+
 		treeNode.setHtmlId(nodeId);
 
 		html += '<tr id="' + treeNode.getHtmlId() + '" ' +
 		        'data-depth="' + treeNode.getLevel() + '" ' +
-		        'class="expand collapsable level' + treeNode.getLevel() + '" ' +
+		        'class="' + toggleFlag + ' collapsable level' + treeNode.getLevel() + '" ' +
 		        'path="' + treeNode.getPath() + '">';
 
 		html += '<td treeNode class="newNode"';
