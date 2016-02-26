@@ -143,11 +143,11 @@ define(function (require, exports){
 				navNode = navNode.getParent();
 			}
 
-			generateRowHtml(navNode, this.$dialog, true);
+			generateRowHtml(navNode, this.$dialog);
 			var children = navNode.getChildren();
 
 			while (children.length > 0){
-				generateRowHtml(children.pop(), this.$dialog, false);
+				generateRowHtml(children.pop(), this.$dialog);
 			}
 
 			this.formatTreeNode();
@@ -155,6 +155,7 @@ define(function (require, exports){
 			this.setTreeNodeCheckHandler();
 
 			this.setTableTitle(navPath);
+			this.expandPath(navPath);
 		}
 		else{
 			Logger.consoleDebug("Unable to navigate to " + navPath);
@@ -202,54 +203,16 @@ define(function (require, exports){
 	ListSelectionDialog.prototype.setTreeNodeToggleHandler = function(){
 		var that = this;
 		this.$dialog.on('click', '.toggle', function() {
-
-			// Get all <tr>'s of the greater depth
-			var findChildren = function (tr) {
-				var depth = tr.data('depth');
-				return tr.nextUntil($('tr').filter(function () {
-					return $(this).data('depth') <= depth;
-				}));
-			};
-
 			var el = $(this);
 			var tr = el.closest('tr'); //Get <tr> parent of toggle button
 			var trPath = tr.attr('path');
-			var children = findChildren(tr);
-
-			//Remove already collapsed nodes from children so that we don't
-			//make them visible.
-			//(Confused? Remove this code and close Item 2, close Item 1
-			//then open Item 1 again, then you will understand)
-			var subnodes = children.filter('.expand');
-			subnodes.each(function () {
-				var subnode = $(this);
-				var subnodeChildren = findChildren(subnode);
-				children = children.not(subnodeChildren);
-			});
 
 			//Change icon and hide/show children
 			if (tr.hasClass('collapse')) {
 				that.collapsePath(trPath);
-//				tr.removeClass('collapse').addClass('expand');
-//				children.hide();
 			} else {
 				that.expandPath(trPath);
-				/*
-				tr.removeClass('expand').addClass('collapse');
-				// if the html is not generated then will have to generate and append to the list
-				var node = that.treeData.getNodeByPath(trPath);
-
-				if (Common.isSet(node.getHtmlId())){
-					children.show();
-				} else {
-					generateRowHtml(node, this.$dialog);
-					this.formatTreeNode();
-					this.setTreeNodeToggleHandler();
-				}
-				*/
 			}
-
-			return children;
 		});
 	};
 
@@ -270,6 +233,11 @@ define(function (require, exports){
 		if (TreeNode.validate(node) && Common.isSet(node.getHtmlId())){
 			$('#' + node.getHtmlId(), this.$dialog).removeClass('expand').addClass('collapse');
 			this.showNode(node);
+
+			while (node.getParent()){
+				$('#' + node.getParent().getHtmlId(), this.$dialog).removeClass('expand').addClass('collapse');
+				node = node.getParent();
+			}
 		}
 	};
 
@@ -436,21 +404,17 @@ define(function (require, exports){
 	 *
 	 **/
 
-	function generateHtmlTreeNode(treeNode, isExpand){
+	function generateHtmlTreeNode(treeNode){
 		Logger.consoleDebug('ListSelectionDialog.generateHtmlTreeNode()');
 
 		var html = '';
 		var nodeId = TREE_TABLE_ID + '-' + treeNode.getId();
-		var toggleFlag = "collapse";
-		if (isExpand){
-			toggleFlag = "expand";
-		}
 
 		treeNode.setHtmlId(nodeId);
 
 		html += '<tr id="' + treeNode.getHtmlId() + '" ' +
 		        'data-depth="' + treeNode.getLevel() + '" ' +
-		        'class="' + toggleFlag + ' collapsable level' + treeNode.getLevel() + '" ' +
+		        'class="expand collapsable level' + treeNode.getLevel() + '" ' +
 		        'path="' + treeNode.getPath() + '">';
 
 		html += '<td treeNode class="newNode"';
