@@ -136,24 +136,6 @@ define(function (require, exports){
 		// Check if navPath existed.
 		var navNode = this.treeData.getNodeByPath(navPath);
 		if (TreeNode.validate(navNode)){
-
-			// If the navigate node is not a directory then move up to parent node
-			console.log(navNode);
-			if (!navNode.isDirectoryNode()){
-				navNode = navNode.getParent();
-			}
-
-			generateRowHtml(navNode, this.$dialog);
-			var children = navNode.getChildren();
-
-			while (children.length > 0){
-				generateRowHtml(children.pop(), this.$dialog);
-			}
-
-			this.formatTreeNode();
-			this.setTreeNodeToggleHandler();
-			this.setTreeNodeCheckHandler();
-
 			this.setTableTitle(navPath);
 			this.expandPath(navPath);
 		}
@@ -230,7 +212,50 @@ define(function (require, exports){
 		Logger.consoleDebug("ListSelectionDialog.expandPath("+path+")");
 
 		var node = this.treeData.getNodeByPath(path);
-		if (TreeNode.validate(node) && Common.isSet(node.getHtmlId())){
+		if (TreeNode.validate(node)){
+			var currNode = node;
+			var workStack = [];
+			var htmlId, html;
+
+			// Search for all of the node that need to generate HTML code
+			if (!node.getHtmlId()){
+				while (Common.isSet(currNode)){
+					if (!Common.isSet(currNode.getHtmlId())){
+						workStack.push(currNode);
+					}
+
+					currNode = currNode.getParent();
+				}
+
+				// Generate HTML code
+				while (workStack.length > 0){
+					currNode = workStack.pop();
+
+					html = generateHtmlTreeNode(currNode);
+					htmlId = this.findPreviousNodeHtmlId(currNode);
+
+					if (htmlId === TREE_TABLE_ID){
+						$('#' + TREE_DIV_ID, this.$dialog).html(generateHtmlTreeContainer(TREE_TABLE_ID));
+						$('#' + htmlId, this.$dialog).html(html);
+					}
+					else{
+						$('#' + htmlId, this.$dialog).after(html);
+					}
+				}
+
+				var children = node.getChildren();
+
+				for (var index = 0; index < children.length; index++){
+					html = generateHtmlTreeNode(children[index]);
+					htmlId = this.findPreviousNodeHtmlId(children[index]);
+					$('#' + htmlId, this.$dialog).after(html);
+				}
+
+				this.formatTreeNode();
+				this.setTreeNodeCheckHandler();
+				this.setTreeNodeToggleHandler();
+			}
+
 			$('#' + node.getHtmlId(), this.$dialog).removeClass('expand').addClass('collapse');
 			this.showNode(node);
 
@@ -311,33 +336,28 @@ define(function (require, exports){
 
 	};
 
+	/**
+	 *
+	 **/
+	ListSelectionDialog.prototype.findPreviousNodeHtmlId = function (treeNode){
+		Logger.consoleDebug("ListSelectionDialog.findPreviousNodeHtmlId()");
+		var htmlId = TREE_TABLE_ID;
+		var list = [];
 
-	function generateRowHtml(treeNode, $dialog, isExpand){
-		var htmlId = treeNode.getHtmlId();
-		var html   = '';
+		list.push(this.treeData.getRootNode());
+		list = list.concat(this.treeData.getRootNode().getAllChildren());
 
-		if (Common.isEmpty(htmlId)){
-			if (Common.isEmpty(treeNode.getParent())){
-				html = generateHtmlTreeContainer(TREE_TABLE_ID);
-				$('#' + TREE_DIV_ID, $dialog).html(html);
-
-				html = generateHtmlTreeNode(treeNode, isExpand);
-				$('#' + TREE_TABLE_ID, $dialog).html(html);
-				htmlId = treeNode.getHtmlId();
+		for (var index = 0; index < list.length; index++){
+			if (list[index].getPath() == treeNode.getPath()){
+				break;
 			}
-			else {
-				htmlId = generateRowHtml(treeNode.getParent());
-
-				html = generateHtmlTreeNode(treeNode, isExpand);
-				$('#' + htmlId, $dialog).after(html);
-				htmlId = treeNode.getHtmlId();
+			if (Common.isSet(list[index].getHtmlId())){
+				htmlId = list[index].getHtmlId();
 			}
-
 		}
 
 		return htmlId;
-	}
-
+	};
 
 	/**
 	 *
