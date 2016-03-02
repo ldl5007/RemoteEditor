@@ -14,7 +14,7 @@ define(function (require, exports){
 
 	var TREE_DIV_ID   = "list-table",
 		TREE_TABLE_ID = TREE_DIV_ID + '-tree',
-		CURR_PATH_ID  = "#dir-text";
+		CURR_PATH_ID  = "dir-text";
 
 	exports.newDialog  = newDialog;
 
@@ -22,18 +22,10 @@ define(function (require, exports){
 	 *
 	 **/
 
-	function ListSelectionDialog(inputList, listTitle){
+	function ListSelectionDialog(dlgTitle){
 		this.dialogTemplate = require("text!templates/list-selection-dialog.html");
-		this.inputList = inputList;
-		this.listTitle = listTitle;
-
-		Logger.consoleDebug(this.listTitle);
-
+		this._title = dlgTitle;
 		this.treeData = Tree.newFileTree('ListSelectionDialog');
-
-		for (var i = 0; i < inputList.length; i++){
-			this.treeData.addRelativePath(inputList[i], false);
-		}
 	}
 
 	/**
@@ -48,14 +40,8 @@ define(function (require, exports){
 
 			this.dialog = Dialogs.showModalDialogUsingTemplate(compiledTemplate);
 			this.$dialog = this.dialog.getElement();
-			this.$listTable  = $('#' + TREE_DIV_ID, this.$dialog);
 
 			this.$dialog.on("change", CURR_PATH_ID, dirTextChangedHandler);
-
-			//this.setTableTitle(this.listTitle);
-
-//			refreshTableData(this.treeData, this.$dialog);
-
 
 		} else {
 			alert("dialog is already shown");
@@ -77,10 +63,10 @@ define(function (require, exports){
 	 *  Todo: remove this method sometime later
 	 **/
 
-	ListSelectionDialog.prototype.setTableTitle = function(inputStr){
+	ListSelectionDialog.prototype.setCurrentPath = function(inputStr){
 		Logger.consoleDebug('ListSelectionDialog.setTableTitle('+inputStr+')');
 		inputStr = FileUtils.stripTrailingSlash(inputStr);
-		$('#dir-text', this.$dialog).val(inputStr);
+		$('#' + CURR_PATH_ID, this.$dialog).val(inputStr);
 	};
 
 	/**
@@ -136,10 +122,11 @@ define(function (require, exports){
 		// Check if navPath existed.
 		var navNode = this.treeData.getNodeByPath(navPath);
 		if (TreeNode.validate(navNode)){
-			this.setTableTitle(navPath);
+			this.setCurrentPath(navPath);
 			this.expandPath(navPath);
 		}
 		else{
+			alert("Unable to navigate to " + navPath);
 			Logger.consoleDebug("Unable to navigate to " + navPath);
 		}
 	};
@@ -213,47 +200,8 @@ define(function (require, exports){
 
 		var node = this.treeData.getNodeByPath(path);
 		if (TreeNode.validate(node)){
-			var currNode = node;
-			var workStack = [];
-			var htmlId, html;
-
-			// Search for all of the node that need to generate HTML code
-			if (!node.getHtmlId()){
-				while (Common.isSet(currNode)){
-					if (!Common.isSet(currNode.getHtmlId())){
-						workStack.push(currNode);
-					}
-
-					currNode = currNode.getParent();
-				}
-
-				// Generate HTML code
-				while (workStack.length > 0){
-					currNode = workStack.pop();
-
-					html = generateHtmlTreeNode(currNode);
-					htmlId = this.findPreviousNodeHtmlId(currNode);
-
-					if (htmlId === TREE_TABLE_ID){
-						$('#' + TREE_DIV_ID, this.$dialog).html(generateHtmlTreeContainer(TREE_TABLE_ID));
-						$('#' + htmlId, this.$dialog).html(html);
-					}
-					else{
-						$('#' + htmlId, this.$dialog).after(html);
-					}
-				}
-
-				var children = node.getChildren();
-
-				for (var index = 0; index < children.length; index++){
-					html = generateHtmlTreeNode(children[index]);
-					htmlId = this.findPreviousNodeHtmlId(children[index]);
-					$('#' + htmlId, this.$dialog).after(html);
-				}
-
-				this.formatTreeNode();
-				this.setTreeNodeCheckHandler();
-				this.setTreeNodeToggleHandler();
+			if (!Common.isSet(node.getHtmlId())){
+				this.buildTreeNode(node);
 			}
 
 			$('#' + node.getHtmlId(), this.$dialog).removeClass('expand').addClass('collapse');
@@ -278,18 +226,65 @@ define(function (require, exports){
 	};
 
 
-	ListSelectionDialog.prototype.showNode = function(treeNode){
-		if (Common.isSet(treeNode.getHtmlId())){
-			if ($('#' + treeNode.getHtmlId(), this.$dialog).hasClass('collapse')){
-				var children = treeNode.getChildren();
-				for (var index = 0; index < children.length; index++){
-					if (Common.isSet(children[index].getHtmlId)){
-						$('#' + children[index].getHtmlId(), this.$dialog).show();
-						this.showNode(children[index]);
+	ListSelectionDialog.prototype.showNode = function (treeNode) {
+		if (Common.isSet(treeNode.getHtmlId())) {
+			if (treeNode.isPathValidated()) {
+				if ($('#' + treeNode.getHtmlId(), this.$dialog).hasClass('collapse')) {
+					var children = treeNode.getChildren();
+					for (var index = 0; index < children.length; index++) {
+						if (Common.isSet(children[index].getHtmlId)) {
+							$('#' + children[index].getHtmlId(), this.$dialog).show();
+							this.showNode(children[index]);
+						}
 					}
 				}
+			} else {
+				alert(treeNode.getPath() + " need to be validate");
+			}
+
+		}
+	};
+
+	ListSelectionDialog.prototype.buildTreeNode = function (treeNode) {
+		var currNode = treeNode;
+		var workStack = [];
+		var htmlId, html;
+
+		// Search for all of the node that need to generate HTML code
+		while (Common.isSet(currNode)) {
+			if (!Common.isSet(currNode.getHtmlId())) {
+				workStack.push(currNode);
+			}
+
+			currNode = currNode.getParent();
+		}
+
+		// Generate HTML code
+		while (workStack.length > 0) {
+			currNode = workStack.pop();
+
+			html = generateHtmlTreeNode(currNode);
+			htmlId = this.findPreviousNodeHtmlId(currNode);
+
+			if (htmlId === TREE_TABLE_ID) {
+				$('#' + TREE_DIV_ID, this.$dialog).html(generateHtmlTreeContainer(TREE_TABLE_ID));
+				$('#' + htmlId, this.$dialog).html(html);
+			} else {
+				$('#' + htmlId, this.$dialog).after(html);
 			}
 		}
+
+		var children = treeNode.getChildren();
+
+		for (var index = 0; index < children.length; index++) {
+			html = generateHtmlTreeNode(children[index]);
+			htmlId = this.findPreviousNodeHtmlId(children[index]);
+			$('#' + htmlId, this.$dialog).after(html);
+		}
+
+		this.formatTreeNode();
+		this.setTreeNodeCheckHandler();
+		this.setTreeNodeToggleHandler();
 	};
 	/**
 	 *
@@ -366,7 +361,6 @@ define(function (require, exports){
 		Logger.consoleDebug("dirTextChangedHandler()");
 	}
 
-
 	/**
 	 *
 	 **/
@@ -378,8 +372,6 @@ define(function (require, exports){
 		Logger.consoleDebug(dispText);
 		$('#dialog-status', $dialog).text(dispText);
 	}
-
-
 
 	/*
 	 * Collapse the entire tree
@@ -420,7 +412,7 @@ define(function (require, exports){
 		return html;
 	}
 
-		/**
+	/**
 	 *
 	 **/
 
@@ -462,7 +454,7 @@ define(function (require, exports){
 		return html;
 	}
 
-	function newDialog(inputList, listTitle){
-		return new ListSelectionDialog(inputList, listTitle);
+	function newDialog(dlgTitle){
+		return new ListSelectionDialog(dlgTitle);
 	}
 });

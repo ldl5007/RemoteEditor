@@ -19,6 +19,7 @@ define (function (require, exports){
 
 		this._isSelectable = isSelectable;
 		this._isSelected  = isSelected;
+		this._isPathValidated = false;
 	}
 
 	/**
@@ -78,6 +79,9 @@ define (function (require, exports){
 		return this._isSelected;
 	};
 
+	TreeNode.prototype.isPathValidated = function (){
+		return this._isPathValidated;
+	};
 
 	/**
 	 * Resource assigning methods
@@ -110,6 +114,9 @@ define (function (require, exports){
 		this._isSelected = selected;
 	};
 
+	TreeNode.prototype.setPathValidate = function(status){
+		this._isPathValidated = status;
+	};
 
 	/**
 	 * Return root node of the current node.
@@ -203,6 +210,7 @@ define (function (require, exports){
 		Logger.consoleDebug('htmlId:    ' + this.getHtmlId());
 		Logger.consoleDebug('isSelectable:' + this.isSelectable());
 		Logger.consoleDebug('isSeleted:   ' + this.isSelected());
+		Logger.consoleDebug('isPathValidated ' + this.isPathValidated());
 
 		var children = this.getChildren();
 		Logger.consoleDebug('chidren count:' + children.length);
