@@ -63,8 +63,8 @@ define (function (require, exports){
 			}
 		}
 
-		dirList = dirList.sort(function (a,b) {return a.getName() > b.getName();});
-		fileList = fileList.sort(function (a,b) {return a.getName() > b.getName();});
+		dirList  = dirList.sort (function (a,b) {return a.getPath().localeCompare(b.getPath());});
+		fileList = fileList.sort(function (a,b) {return a.getPath().localeCompare(b.getPath());});
 
 		retList = dirList.concat(fileList);
 
@@ -179,9 +179,22 @@ define (function (require, exports){
 	TreeNode.prototype.getAllChildren = function(){
 		Logger.consoleDebug("TreeNode.getAllChildren()");
 		var children = this.getChildren();
+		var child, grandChildren, firstHaft, secondHaft;
 
-		for(var child = 0; child < this.getChildren().length; child++){
-			children = children.concat(this.getChildren()[child].getAllChildren());
+		for(var index = 0; index < children.length; index++){
+
+			child = children[index];
+			grandChildren = child.getAllChildren();
+			if (grandChildren.length > 0){
+
+				console.log(children);
+
+				firstHaft  = children.slice(0, index + 1);
+				secondHaft = children.slice(index + 1, children.length);
+
+				children = firstHaft.concat(grandChildren, secondHaft);
+				index += grandChildren.length;
+			}
 		}
 
 		return children;

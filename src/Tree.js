@@ -3,14 +3,14 @@ define (function (require, exports){
 
 	var FileUtils   = brackets.getModule("file/FileUtils"),
 		Common    = require("src/Common"),
-		Globals   = require("src/Globals"),
 		Logger    = require("src/Logger"),
 		TreeNode  = require("src/TreeNode");
 
 	function Tree(name){
 		this._name = name;
 		this._rootNode = null;
-		this._nodeInventory = [];
+		this._nodeInventory  = [];
+		this._sortedNodeList = [];
 		this._currentId = 0;
 		this._isRowSelectable = true;
 	}
