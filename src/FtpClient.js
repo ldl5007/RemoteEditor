@@ -17,8 +17,6 @@ define( function (require, exports, module){
 		Events       = require("src/Events"),
 		FtpDomain    = new NodeDomain(DomainGlobal.WinFtp.domainName, ExtensionUtils.getModulePath(module, "../node/WinFtpDomain"));
 
-	var dummy = require("src/TreeNode");
-
 	var _currSite = null,
 		_currDialog = null,
 		_dirList = [];
@@ -36,16 +34,17 @@ define( function (require, exports, module){
 
 				console.log(response.stdout);
 
-				var lsOutputArr = parseLsCmdResponse(response.stdout);
+				var lsOutputObj = parseLsCmdResponse(response.stdout);
 
-				console.log(lsOutputArr);
+				console.log(lsOutputObj);
 
-				for (var index = 0; index < lsOutputArr.length; index++ ){
-					_currDialog.addFilePath(lsOutputArr[index]);
+				for (var index = 0; index < lsOutputObj.dataArr.length; index++ ){
+					_currDialog.addFilePath(lsOutputObj.dataArr[index]);
 				}
 
 				//	_currDialog.refresh();
-				_currDialog.navigateTo('/a/lyzla01/');
+				_currDialog.validatePath(lsOutputObj.dir);
+				_currDialog.navigateTo(lsOutputObj.dir);
 			}
 		}
 
@@ -122,7 +121,7 @@ define( function (require, exports, module){
 	function parseLsCmdResponse(respStr){
 		Logger.consoleDebug("FtpClient.parseLsCmdResponse()");
 
-		var returnArr = [];
+		var retObj = {};
 		var lsOutputArr = [];
 		var dirStr = "";
 		var newStr = "";
@@ -141,6 +140,8 @@ define( function (require, exports, module){
 
 			if (isDirStr){
 				dirStr = newStr.split('"').splice(1,1);
+				retObj.dir = dirStr + '/';
+				retObj.dataArr = [];
 				isDirStr = false;
 			}
 
@@ -158,21 +159,22 @@ define( function (require, exports, module){
 		}
 
 		for (var index = 0; index < lsOutputArr.length; index++){
-			strArr = lsOutputArr[index].split(" ");
+			strArr = lsOutputArr[index].split(/\s+/);
+			console.log(strArr);
 
 			// If this is a USS output
-			if (!isSystemZ){
+			if (!isSystemZ && strArr.length == 9){
 				if (strArr[0].indexOf('d') != -1){
 					newStr = strArr[strArr.length - 1] + "/";
 				} else {
 					newStr = strArr[strArr.length - 1];
 				}
 
-				returnArr.push(dirStr + "/" + newStr);
+				retObj.dataArr.push(retObj.dir + newStr);
 			}
 		}
 
-		return returnArr;
+		return retObj;
 	}
 
 
@@ -183,8 +185,9 @@ define( function (require, exports, module){
 	EventEmitter.on(Events.FTP_CLIENT_CMD_LS, function (listDir) {
 		Logger.consoleDebug("FtpClient Event: " + Events.FTP_CLIENT_CMD_LS);
 
-		/* LDL5007 Testing block */
-		dummy.testing();
+		if (StringUtils.endsWith(listDir, '/')){
+			listDir = FileUtils.stripTrailingSlash(listDir);
+		}
 
 		var cmdArr = [];
 		cmdArr.push("CD " + listDir);

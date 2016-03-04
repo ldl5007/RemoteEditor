@@ -2,11 +2,14 @@ define(function (require, exports){
 	"use strict";
 
 	var Dialogs   = brackets.getModule("widgets/Dialogs"),
-	    FileUtils = brackets.getModule("file/FileUtils");
+	    FileUtils = brackets.getModule("file/FileUtils"),
+		StringUtils = brackets.getModule("utils/StringUtils");
 	var Strings      = require("../strings"),
 		Logger       = require("./Logger"),
 		Common       = require("./Common"),
-		Globals      = require('./Globals');
+		Globals      = require('./Globals'),
+		EventEmitter = require("./EventEmitter"),
+		Events       = require("./Events");
 
 	// debug
 	var Tree         = require("./Tree"),
@@ -119,6 +122,10 @@ define(function (require, exports){
 	ListSelectionDialog.prototype.navigateTo = function(navPath){
 		Logger.consoleDebug("ListSelectionDialog.navigateTo("+navPath+")");
 
+		if (!StringUtils.endsWith(navPath, '/')){
+			navPath += '/';
+		}
+
 		// Check if navPath existed.
 		var navNode = this.treeData.getNodeByPath(navPath);
 		if (TreeNode.validate(navNode)){
@@ -195,21 +202,34 @@ define(function (require, exports){
 		}
 	};
 
+	ListSelectionDialog.prototype.validatePath = function (path){
+		Logger.consoleDebug("ListSelectionDialog.validatePath("+path+")");
+
+		var node = this.treeData.getNodeByPath(path);
+		if (TreeNode.validate(node)){
+			node.setPathValidate(true);
+		}
+	};
+
 	ListSelectionDialog.prototype.expandPath = function(path){
 		Logger.consoleDebug("ListSelectionDialog.expandPath("+path+")");
 
 		var node = this.treeData.getNodeByPath(path);
 		if (TreeNode.validate(node)){
-			if (!Common.isSet(node.getHtmlId())){
-				this.buildTreeNode(node);
+			this.buildTreeNode(node);
+
+			if (!node.isPathValidated()){
+				this.hideNode(node);
+				EventEmitter.emitFactory(Events.FTP_CLIENT_CMD_LS)(path);
 			}
+			else {
+				$('#' + node.getHtmlId(), this.$dialog).removeClass('expand').addClass('collapse');
+				this.showNode(node);
 
-			$('#' + node.getHtmlId(), this.$dialog).removeClass('expand').addClass('collapse');
-			this.showNode(node);
-
-			while (node.getParent()){
-				$('#' + node.getParent().getHtmlId(), this.$dialog).removeClass('expand').addClass('collapse');
-				node = node.getParent();
+				while (node.getParent()){
+					$('#' + node.getParent().getHtmlId(), this.$dialog).removeClass('expand').addClass('collapse');
+					node = node.getParent();
+				}
 			}
 		}
 	};
@@ -228,20 +248,15 @@ define(function (require, exports){
 
 	ListSelectionDialog.prototype.showNode = function (treeNode) {
 		if (Common.isSet(treeNode.getHtmlId())) {
-			if (treeNode.isPathValidated()) {
-				if ($('#' + treeNode.getHtmlId(), this.$dialog).hasClass('collapse')) {
-					var children = treeNode.getChildren();
-					for (var index = 0; index < children.length; index++) {
-						if (Common.isSet(children[index].getHtmlId)) {
-							$('#' + children[index].getHtmlId(), this.$dialog).show();
-							this.showNode(children[index]);
-						}
+			if ($('#' + treeNode.getHtmlId(), this.$dialog).hasClass('collapse')) {
+				var children = treeNode.getChildren();
+				for (var index = 0; index < children.length; index++) {
+					if (Common.isSet(children[index].getHtmlId)) {
+						$('#' + children[index].getHtmlId(), this.$dialog).show();
+						this.showNode(children[index]);
 					}
 				}
-			} else {
-				alert(treeNode.getPath() + " need to be validate");
 			}
-
 		}
 	};
 
@@ -277,9 +292,11 @@ define(function (require, exports){
 		var children = treeNode.getChildren();
 
 		for (var index = 0; index < children.length; index++) {
-			html = generateHtmlTreeNode(children[index]);
-			htmlId = this.findPreviousNodeHtmlId(children[index]);
-			$('#' + htmlId, this.$dialog).after(html);
+			if (!children[index].getHtmlId()){
+				html = generateHtmlTreeNode(children[index]);
+				htmlId = this.findPreviousNodeHtmlId(children[index]);
+				$('#' + htmlId, this.$dialog).after(html);
+			}
 		}
 
 		this.formatTreeNode();
